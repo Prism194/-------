@@ -1,0 +1,10 @@
+cs50
+Flask
+Flask-Session
+pytz
+requests
+
+로그인 기능
+담기 기능
+카트 눌렀을 때 보기 기능
+
