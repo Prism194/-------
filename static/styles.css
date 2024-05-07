@@ -10824,3 +10824,19 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.list_component {
+  text-decoration-line: none; 
+  color:black;
+  font-size: 20px;
+}
+.py-5 {
+  background-repeat:no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
