@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log in
+{% endblock %}
+
+{% block content %}
+
+    <div class="card border-dark bg-white text-dark" style="width: 400px; height: 300px; margin :10px auto;">
+        <div class="card-header">
+            <h3>Add new products</h3>
+        </div>
+        <div class="card-body">
+            <form action="/add" method="post">
+                <div class="mb-3">
+                    <input autocomplete="off" autofocus type="text" class="form-control" name="product_name" placeholder="Product name">
+                </div>
+                <div class="mb-3">
+                    <input autocomplete="off" autofocus type="integer" class="form-control" name="quantity" placeholder="Quantity">
+                </div>
+                <div class="mb-3">
+                    <input autocomplete="off" autofocus type="integer" class="form-control" name="price" placeholder="Price">
+                </div>                
+                <div class="col text-center">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
