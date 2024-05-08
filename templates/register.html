@@ -5,19 +5,27 @@
 {% endblock %}
 
 {% block content %}
-    <form action="/register" method="post">
-        <div class="mt-5 mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text">
+    
+    <div class="card border-dark bg-white text-dark" style="width: 400px; height: 300px; margin :10px auto;">
+        <div class="card-header">
+            <h3>Register to REFILM</h3>
         </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password">
+        <div class="card-body">
+            <form action="/register" method="post">
+                <div class="mb-3">
+                    <input autocomplete="off" autofocus type="text" class="form-control" name="username" placeholder="Username">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" name="password" placeholder="Password">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" name="confirmation" placeholder="Confirm password">
+                </div>
+                <div class="col text-center">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+            </form>
         </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="confirmation" placeholder="Confirmation" type="password">
-        </div>
-        <div class="col text-center">
-            <button class="btn btn-primary" type = "submit">Register</button>
-        </div>
+    </div>
         
-    </form>
 {% endblock %}
