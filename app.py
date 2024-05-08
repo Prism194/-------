@@ -21,6 +21,7 @@ db = SQL("sqlite:///info.db")
 @app.route('/')
 def home():
   # You can add logic for your homepage here if needed
+  # database -> image, product name, price
   return render_template('index.html')  # Assuming you have an index.html
 
 @app.route('/about')
@@ -28,6 +29,17 @@ def about():
   # You can pass data to product1.html if needed using variables here
   return render_template('about.html')
 
+@app.route('/add', methods=['GET', 'POST'])
+def add():
+    if request.method == "POST":
+        product_name = request.form.get("product_name")
+        quantity = request.form.get("quantity")
+        price = request.form.get("price")
+        db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
+        return redirect("/")
+    else:
+        return render_template("add.html")
+    
 @app.route('/product1')
 def product1():
   # You can pass data to product1.html if needed using variables here
