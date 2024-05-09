@@ -64,18 +64,62 @@ def add():
     else:
         return render_template("add.html")
 
-@app.route('/manage', methods=['GET', 'POST'])
+@app.route('/manage')
 @login_required
 def manage():
+    product_id = db.execute("SELECT id FROM products")
     product_name = db.execute("SELECT productname FROM products")
     quantity = db.execute("SELECT quantity FROM products")
     price = db.execute("SELECT price FROM products")
     length = len(product_name)
     products = []
     for i in range(length):
-        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"]})
+        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), })
     return render_template("manage.html", products=products)
-    
+
+@app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
+@login_required
+def edit(product_id):
+    if request.method == 'POST':
+        old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
+        old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
+        old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
+        product_name_error = None
+        quantity_error = None
+        price_error = None
+        product_name = request.form.get("product_name")
+        # check if the product name is input
+        if not product_name:
+            product_name_error = "Please input product name"
+
+        quantity = request.form.get("quantity")
+        # check if the quantity is input
+        if not quantity:
+            quantity_error = "Please input stock"
+        # check if the quantity is valid, only takes 0 and positive integer
+        if quantity and not quantity.isdigit():
+            quantity_error = "Please input appropriate stock"
+
+        price = request.form.get("price")
+        # check if the price is input
+        if not price:
+            price_error = "Please input price"
+        # check if the price is valid, only takes 0 and positive integer
+        if price and not price.isdigit():
+            price_error = "Please input appropriate price"
+        if not any([product_name_error, quantity_error, price_error]):
+            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
+            return redirect("/")
+        else:
+            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)        
+    #get
+    else:
+        old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
+        old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
+        old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
+        return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"])
+
+        
 
 @app.route('/product1')
 def product1():

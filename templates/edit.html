@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log in
+{% endblock %}
+
+{% block content %}
+
+    <div class="card border-dark bg-white text-dark" style="width: 400px; height: fit-content; margin :10px auto;">
+        <div class="card-header">
+            <h3>Edit {{ old_product_name }} information</h3>
+        </div>
+        <div class="card-body">
+            <form action="/edit/{{ product_id }}" method="post">
+                <div class="mb-3">
+                    <input autocomplete="off" autofocus type="text" class="form-control" name="product_name" placeholder="Product name" value="{{ old_product_name }}">
+                </div>
+                {% if product_name_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ product_name_error }}
+                    </div>
+                {% endif %}
+                <div class="mb-3">
+                    <input autocomplete="off" type="text" class="form-control" name="quantity" placeholder="Stock" value="{{ old_quantity }}">
+                </div>
+                {% if quantity_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ quantity_error }}
+                    </div>
+                {% endif %}
+                <div class="mb-3">
+                    <input autocomplete="off" type="text" class="form-control" name="price" placeholder="Price" value="{{ old_price }}">
+                </div>
+                {% if price_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ price_error }}
+                    </div>
+                {% endif %}                  
+                <div class="col text-center">
+                    <button type="submit" class="btn btn-primary">Revise</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
