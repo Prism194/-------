@@ -6,26 +6,41 @@
 
 {% block content %}
     
-    <div class="card border-dark bg-white text-dark" style="width: 400px; height: 300px; margin :10px auto;">
-        <div class="card-header">
-            <h3>Register to REFILM</h3>
-        </div>
-        <div class="card-body">
-            <form action="/register" method="post">
-                <div class="mb-3">
-                    <input autocomplete="off" autofocus type="text" class="form-control" name="username" placeholder="Username">
-                </div>
-                <div class="mb-3">
-                    <input type="password" class="form-control" name="password" placeholder="Password">
-                </div>
-                <div class="mb-3">
-                    <input type="password" class="form-control" name="confirmation" placeholder="Confirm password">
-                </div>
-                <div class="col text-center">
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </div>
-            </form>
-        </div>
+<div class="card border-dark bg-white text-dark" style="width: 400px; height:fit-content; margin :10px auto ">
+    <div class="card-header">
+        <h3>Register to REFILM</h3>
     </div>
+    <div class="card-body">
+        <form action="/register" method="post">
+            <div class="mb-3">
+                <input autocomplete="off" autofocus type="text" class="form-control" name="username" placeholder="Username">
+            </div>
+            {% if username_error %}
+                <div class="alert alert-danger" role="alert">
+                {{ username_error }}
+                </div>
+            {% endif %}
+            <div class="mb-3">
+                <input type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+            {% if password_error %}
+                <div class="alert alert-danger" role="alert">
+                {{ password_error }}
+                </div>
+            {% endif %}
+            <div class="mb-3">
+                <input type="password" class="form-control" name="confirmation" placeholder="Confirm password">
+            </div>
+            {% if confirmation_error %}
+                <div class="alert alert-danger" role="alert">
+                {{ confirmation_error }}
+                </div>
+            {% endif %}
+            <div class="col text-center">
+                <button type="submit" class="btn btn-primary">Register</button>
+            </div>
+        </form>
+    </div>
+</div>
         
 {% endblock %}

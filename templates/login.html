@@ -6,7 +6,7 @@
 
 {% block content %}
 
-    <div class="card border-dark bg-white text-dark" style="width: 400px; height: 250px; margin :10px auto;">
+    <div class="card border-dark bg-white text-dark" style="width: 400px; height: fit-content; margin :10px auto;">
         <div class="card-header">
             <h3>Log in to REFILM</h3>
         </div>
@@ -15,9 +15,19 @@
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="text" class="form-control" name="username" placeholder="Username">
                 </div>
+                {% if username_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ username_error }}
+                    </div>
+                {% endif %}
                 <div class="mb-3">
                     <input type="password" class="form-control" name="password" placeholder="Password">
-                </div>                
+                </div>
+                {% if password_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ password_error }}
+                    </div>
+                {% endif %}                
                 <div class="col text-center">
                     <button type="submit" class="btn btn-primary">Log in</button>
                 </div>
