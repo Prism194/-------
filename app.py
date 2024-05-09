@@ -91,7 +91,7 @@ def manage():
     for num in range(1, total_pages + 1):
         link = url_for('manage', page=num)  # Generate URL for each page
         pagination_links.append(link)
-    return render_template("manage.html", products=products, pagination_links=pagination_links)
+    return render_template("manage.html", products=products, pagination_links=pagination_links, page=page)
 
 @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -160,10 +160,11 @@ def delete(product_id):
     return redirect(url_for('manage', page=page))
           
 
-@app.route('/product1')
-def product1():
+@app.route('/all_products')
+def all_products():
   # You can pass data to product1.html if needed using variables here
-  return render_template('product1.html')
+  
+  return render_template('all_products.html')
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
