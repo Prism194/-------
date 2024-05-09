@@ -109,7 +109,7 @@ def edit(product_id):
             price_error = "Please input appropriate price"
         if not any([product_name_error, quantity_error, price_error]):
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
-            return redirect("/")
+            return redirect("/manage")
         else:
             return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)        
     #get
@@ -119,7 +119,12 @@ def edit(product_id):
         old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
         return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"])
 
-        
+@app.route('/delete/<int:product_id>')
+@login_required
+def delete(product_id):
+    db.execute("DELETE FROM products WHERE id = ?", product_id)
+    return redirect("/manage")
+          
 
 @app.route('/product1')
 def product1():
