@@ -38,4 +38,11 @@
             </tr>
         </tbody>
     </table>
+    <ul class="pagination justify-content-center">
+        {% for link in pagination_links %}
+          <li class="page-item">
+            <a class="page-link" href="{{ link }}">{{ loop.index}}</a>
+          </li>
+        {% endfor %}
+    </ul>
 {% endblock %}

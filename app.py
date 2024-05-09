@@ -1,7 +1,7 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -17,6 +17,9 @@ Session(app)
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///info.db")
+
+# Pagination pages
+PER_PAGE = 5
 
 @app.route('/')
 def home():
@@ -58,7 +61,7 @@ def add():
             price_error = "Please input appropriate price"
         if not any([product_name_error, quantity_error, price_error]):
             db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
-            return redirect("/")
+            return redirect("/manage")
         else:
             return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
     else:
@@ -67,15 +70,28 @@ def add():
 @app.route('/manage')
 @login_required
 def manage():
+    # check if the page parameter is in URL, and get it
+    page = int(request.args.get('page', 1))
     product_id = db.execute("SELECT id FROM products")
     product_name = db.execute("SELECT productname FROM products")
     quantity = db.execute("SELECT quantity FROM products")
     price = db.execute("SELECT price FROM products")
-    length = len(product_name)
+    length = len(product_id)
     products = []
     for i in range(length):
-        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), })
-    return render_template("manage.html", products=products)
+        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"])})
+    
+    # find the start and end index of the products to display
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('manage', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    return render_template("manage.html", products=products, pagination_links=pagination_links)
 
 @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -108,11 +124,18 @@ def edit(product_id):
         if price and not price.isdigit():
             price_error = "Please input appropriate price"
         if not any([product_name_error, quantity_error, price_error]):
+            product_list=[]
+            product_list = db.execute("SELECT productname FROM products")
+            length = len(product_list)
+            for i in range(length):
+                product_list[i] = (product_list[i]["productname"])
+            index = product_list.index(old_product_name[0]["productname"])
+            page = index // PER_PAGE + 1           
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
-            return redirect("/manage")
+            return redirect(url_for('manage', page=page))
         else:
             return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)        
-    #get
+    # get
     else:
         old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
         old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
@@ -122,8 +145,19 @@ def edit(product_id):
 @app.route('/delete/<int:product_id>')
 @login_required
 def delete(product_id):
+    product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
+    product_list=[]
+    product_list = db.execute("SELECT productname FROM products")
+    length = len(product_list)
+    for i in range(length):
+        product_list[i] = (product_list[i]["productname"])
+    index = product_list.index(product_name[0]["productname"])
+    if index % PER_PAGE == 0:
+        page = index // PER_PAGE
+    else:
+        page = index // PER_PAGE + 1
     db.execute("DELETE FROM products WHERE id = ?", product_id)
-    return redirect("/manage")
+    return redirect(url_for('manage', page=page))
           
 
 @app.route('/product1')
