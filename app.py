@@ -63,7 +63,20 @@ def add():
             return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
     else:
         return render_template("add.html")
+
+@app.route('/manage', methods=['GET', 'POST'])
+@login_required
+def manage():
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    length = len(product_name)
+    products = []
+    for i in range(length):
+        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"]})
+    return render_template("manage.html", products=products)
     
+
 @app.route('/product1')
 def product1():
   # You can pass data to product1.html if needed using variables here
