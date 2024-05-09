@@ -30,13 +30,37 @@ def about():
   return render_template('about.html')
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add():
+    product_name_error = None
+    quantity_error = None
+    price_error = None
     if request.method == "POST":
         product_name = request.form.get("product_name")
+        # check if the product name is input
+        if not product_name:
+            product_name_error = "Please input product name"
+
         quantity = request.form.get("quantity")
+        # check if the quantity is input
+        if not quantity:
+            quantity_error = "Please input stock"
+        # check if the quantity is valid, only takes 0 and positive integer
+        if quantity and not quantity.isdigit():
+            quantity_error = "Please input appropriate stock"
+
         price = request.form.get("price")
-        db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
-        return redirect("/")
+        # check if the price is input
+        if not price:
+            price_error = "Please input price"
+        # check if the price is valid, only takes 0 and positive integer
+        if price and not price.isdigit():
+            price_error = "Please input appropriate price"
+        if not any([product_name_error, quantity_error, price_error]):
+            db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
+            return redirect("/")
+        else:
+            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
     else:
         return render_template("add.html")
     
