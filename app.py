@@ -48,22 +48,30 @@ def product1():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
+    username_error = None
+    password_error = None
+    confirmation_error = None
     if request.method == "POST":
         username = request.form.get("username")
         if not username:
-            return apology("Please input your username")
+            username_error = "Please input your username"
         check = db.execute("SELECT username FROM users WHERE username == ?", username)
         if check:
-            return apology("Your username is redundant")
+            username_error = "Your username is redundant"
         password = request.form.get("password")
-        confirmation = request.form.get("confirmation")
         if not password:
-            return apology("Please input your password")
-        if password != confirmation:
-            return apology("Your password is not identical with confirmation")
-        hash = generate_password_hash(password, method='pbkdf2', salt_length=16)
-        db.execute("INSERT INTO users (username, hash) VALUES(?, ?)", username, hash)
-        return redirect("/login")
+            password_error = "Please input your password"
+        confirmation = request.form.get("confirmation")
+        if not confirmation:
+            confirmation_error = "Please input confirmation password"
+        if password and confirmation and password != confirmation:
+            confirmation_error = "Your password is not identical with confirmation"
+        if not any([username_error, password_error, confirmation_error]):
+            hash = generate_password_hash(password, method='pbkdf2', salt_length=16)
+            db.execute("INSERT INTO users (username, hash) VALUES(?, ?)", username, hash)
+            return redirect("/login")
+        else:
+            return render_template("register.html", username_error=username_error, password_error=password_error, confirmation_error=confirmation_error)
     else:
         return render_template("register.html")
 
@@ -73,16 +81,17 @@ def login():
 
     # Forget any user_id
     session.clear()
-
+    username_error = None
+    password_error = None
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            username_error = "Please input your username"
 
         # Ensure password was submitted
-        elif not request.form.get("password"):
-            return apology("must provide password", 403)
+        if not request.form.get("password"):
+            password_error = "Please input your password"
 
         # Query database for username
         rows = db.execute(
@@ -93,13 +102,15 @@ def login():
         if len(rows) != 1 or not check_password_hash(
             rows[0]["hash"], request.form.get("password")
         ):
-            return apology("invalid username and/or password", 403)
+            password_error = "invalid username or password"
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
-
-        # Redirect user to home page
-        return redirect("/")
+        if not any([username_error, password_error]):
+            session["user_id"] = rows[0]["id"]
+            # Redirect user to home page
+            return redirect("/")
+        else:
+            return render_template("login.html", username_error=username_error, password_error=password_error)
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
