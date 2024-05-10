@@ -17,7 +17,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Just a dictionary, setting the path to the folder where the images will be edited
-app.config['UPLOAD_FOLDER'] = './images'
+app.config['UPLOAD_FOLDER'] = './static/product_images'
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///info.db")
@@ -74,11 +74,12 @@ def add():
             # Make the file path compatible with operating system
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             file.save(file_path)
+            
         else:
             image_error = "Invalid or no image provided"
 
         if not any([product_name_error, quantity_error, price_error, image_error]):
-            db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
+            db.execute("INSERT INTO products (productname, quantity, price, image_extension) VALUES(?, ?, ?)", product_name, quantity, price, filename.rsplit('.', 1)[1].lower())
             return redirect("/manage")
         else:
             return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
@@ -96,8 +97,6 @@ def get_next_product_id():
     max_id = result[0]['MAX(id)']
     return max_id + 1 if max_id else 1
 
-# Just a dictionary, setting the path to the folder where the images will be uploaded
-app.config['UPLOAD_FOLDER'] = './images'
 
 @app.route('/manage')
 @login_required
@@ -161,7 +160,7 @@ def edit(product_id):
         if file and allowed_file(file.filename):
             # Sanitizes the filename and makes it secure
             filename = secure_filename(file.filename)
-            
+
             # Assuming you have a function to generate the next product id or similar unique identifier
             new_filename = f"product{product_id}.{get_extension(filename)}"
 
@@ -179,7 +178,7 @@ def edit(product_id):
                 product_list[i] = (product_list[i]["productname"])
             index = product_list.index(old_product_name[0]["productname"])
             page = index // PER_PAGE + 1           
-            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
+            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, image_extension = ? WHERE id = ?", product_name, quantity, price, filename.rsplit('.', 1)[1].lower(), product_id)
             return redirect(url_for('manage', page=page))
         else:
             return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
@@ -225,8 +224,16 @@ def delete(product_id):
 @app.route('/all_products')
 def all_products():
   # You can pass data to product1.html if needed using variables here
-  
-  return render_template('all_products.html')
+    product_id = db.execute("SELECT id FROM products")
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    image_extension = db.execute("SELECT image_extension FROM products")
+    length = len(product_id)
+    products = []
+    for i in range(length):
+        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
+    return render_template('all_products.html', products = reversed(products))
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
