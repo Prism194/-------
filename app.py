@@ -4,8 +4,9 @@ from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
-from helpers import apology, login_required
+from helpers import login_required
 
 app = Flask(__name__)
 app.debug = True
@@ -14,6 +15,9 @@ app.debug = True
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
+# Just a dictionary, setting the path to the folder where the images will be edited
+app.config['UPLOAD_FOLDER'] = './images'
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///info.db")
@@ -38,6 +42,7 @@ def add():
     product_name_error = None
     quantity_error = None
     price_error = None
+    image_error = None
     if request.method == "POST":
         product_name = request.form.get("product_name")
         # check if the product name is input
@@ -59,13 +64,40 @@ def add():
         # check if the price is valid, only takes 0 and positive integer
         if price and not price.isdigit():
             price_error = "Please input appropriate price"
-        if not any([product_name_error, quantity_error, price_error]):
+        
+        file = request.files.get("image")
+        if file and allowed_file(file.filename):
+            # Sanitizes the filename and makes it secure
+            filename = secure_filename(file.filename)
+            # Assuming you have a function to generate the next product id or similar unique identifier
+            new_filename = f"product{get_next_product_id()}.{get_extension(filename)}"
+            # Make the file path compatible with operating system
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+            file.save(file_path)
+        else:
+            image_error = "Invalid or no image provided"
+
+        if not any([product_name_error, quantity_error, price_error, image_error]):
             db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
             return redirect("/manage")
         else:
-            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
+            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
     else:
         return render_template("add.html")
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+
+def get_extension(filename):
+    return filename.rsplit('.', 1)[1].lower()
+
+def get_next_product_id():
+    # Logic to get the next product ID or maximum product ID from your database
+    result = db.execute("SELECT MAX(id) FROM products")
+    max_id = result[0]['MAX(id)']
+    return max_id + 1 if max_id else 1
+
+# Just a dictionary, setting the path to the folder where the images will be uploaded
+app.config['UPLOAD_FOLDER'] = './images'
 
 @app.route('/manage')
 @login_required
@@ -103,6 +135,7 @@ def edit(product_id):
         product_name_error = None
         quantity_error = None
         price_error = None
+        image_error = None
         product_name = request.form.get("product_name")
         # check if the product name is input
         if not product_name:
@@ -123,7 +156,22 @@ def edit(product_id):
         # check if the price is valid, only takes 0 and positive integer
         if price and not price.isdigit():
             price_error = "Please input appropriate price"
-        if not any([product_name_error, quantity_error, price_error]):
+        
+        file = request.files.get("image")
+        if file and allowed_file(file.filename):
+            # Sanitizes the filename and makes it secure
+            filename = secure_filename(file.filename)
+            
+            # Assuming you have a function to generate the next product id or similar unique identifier
+            new_filename = f"product{product_id}.{get_extension(filename)}"
+
+            # Make the file path compatible with operating system
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+            delete_existing_image(product_id)
+            file.save(file_path)
+        else:
+            image_error = "Invalid or no image provided"
+        if not any([product_name_error, quantity_error, price_error, image_error]):
             product_list=[]
             product_list = db.execute("SELECT productname FROM products")
             length = len(product_list)
@@ -134,13 +182,24 @@ def edit(product_id):
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
             return redirect(url_for('manage', page=page))
         else:
-            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)        
+            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
     # get
     else:
         old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
         old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
         old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
         return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"])
+    
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+
+def get_extension(filename):
+    return filename.rsplit('.', 1)[1].lower()
+
+def delete_existing_image(product_id):
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        if filename.startswith(f"product{product_id}."):
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 @app.route('/delete/<int:product_id>')
 @login_required
@@ -156,6 +215,9 @@ def delete(product_id):
         page = index // PER_PAGE
     else:
         page = index // PER_PAGE + 1
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        if filename.startswith(f"product{product_id}."):
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     db.execute("DELETE FROM products WHERE id = ?", product_id)
     return redirect(url_for('manage', page=page))
           

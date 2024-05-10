@@ -11,7 +11,15 @@
             <h3>Add new products</h3>
         </div>
         <div class="card-body">
-            <form action="/add" method="post">
+            <form action="/add" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                </div>
+                {% if image_error %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ image_error }}
+                    </div>
+                {% endif %}
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="text" class="form-control" name="product_name" placeholder="Product name">
                 </div>
@@ -21,7 +29,7 @@
                     </div>
                 {% endif %}
                 <div class="mb-3">
-                    <input autocomplete="off" autofocus type="integer" class="form-control" name="quantity" placeholder="Stock">
+                    <input autocomplete="off" autofocus type="number" class="form-control" name="quantity" placeholder="Stock">
                 </div>
                 {% if quantity_error %}
                     <div class="alert alert-danger" role="alert">
@@ -29,7 +37,7 @@
                     </div>
                 {% endif %}
                 <div class="mb-3">
-                    <input autocomplete="off" autofocus type="integer" class="form-control" name="price" placeholder="Price">
+                    <input autocomplete="off" autofocus type="number" class="form-control" name="price" placeholder="Price">
                 </div>
                 {% if price_error %}
                     <div class="alert alert-danger" role="alert">
