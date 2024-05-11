@@ -23,7 +23,10 @@ app.config['UPLOAD_FOLDER'] = './static/product_images'
 db = SQL("sqlite:///info.db")
 
 # Pagination pages
+# manage pages
 PER_PAGE = 5
+# products pages
+PER_PAGE_PRODUCTS = 7
 
 @app.route('/')
 def home():
@@ -66,23 +69,33 @@ def add():
             price_error = "Please input appropriate price"
         
         file = request.files.get("image")
-        if file and allowed_file(file.filename):
-            # Sanitizes the filename and makes it secure
-            filename = secure_filename(file.filename)
-            # Assuming you have a function to generate the next product id or similar unique identifier
-            new_filename = f"product{get_next_product_id()}.{get_extension(filename)}"
-            # Make the file path compatible with operating system
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-            file.save(file_path)
-            
-        else:
-            image_error = "Invalid or no image provided"
+        
+        if any([product_name_error, quantity_error, price_error]):
+            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
+                    
+        # Begin a transaction
+        db.execute("BEGIN")
+        db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
+        result = db.execute("SELECT MAX(id) FROM products")
+        max_id = result[0]['MAX(id)']  # Adjusted for accessing id
 
-        if not any([product_name_error, quantity_error, price_error, image_error]):
-            db.execute("INSERT INTO products (productname, quantity, price, image_extension) VALUES(?, ?, ?)", product_name, quantity, price, filename.rsplit('.', 1)[1].lower())
-            return redirect("/manage")
+        if file and allowed_file(file.filename):
+            try:
+                filename = secure_filename(file.filename)
+                new_filename = f"product{max_id}.{get_extension(filename)}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                file.save(file_path)
+
+                db.execute("UPDATE products SET image_extension = ? WHERE id = ?", get_extension(filename), max_id)
+                db.execute("COMMIT")
+                return redirect("/manage")
+            except Exception as e:
+                db.execute("ROLLBACK")
+                return render_template("add.html", image_error=str(e))
         else:
-            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
+            db.execute("ROLLBACK")
+            image_error = "Invalid or no image provided"
+            return render_template("add.html", image_error=image_error)
     else:
         return render_template("add.html")
 def allowed_file(filename):
@@ -90,13 +103,6 @@ def allowed_file(filename):
 
 def get_extension(filename):
     return filename.rsplit('.', 1)[1].lower()
-
-def get_next_product_id():
-    # Logic to get the next product ID or maximum product ID from your database
-    result = db.execute("SELECT MAX(id) FROM products")
-    max_id = result[0]['MAX(id)']
-    return max_id + 1 if max_id else 1
-
 
 @app.route('/manage')
 @login_required
@@ -223,7 +229,9 @@ def delete(product_id):
 
 @app.route('/all_products')
 def all_products():
-  # You can pass data to product1.html if needed using variables here
+  # You can add logic for your homepage here if needed
+    # database -> image, product name, price, etc
+    page = int(request.args.get('page', 1))
     product_id = db.execute("SELECT id FROM products")
     product_name = db.execute("SELECT productname FROM products")
     quantity = db.execute("SELECT quantity FROM products")
@@ -233,7 +241,20 @@ def all_products():
     products = []
     for i in range(length):
         products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
-    return render_template('all_products.html', products = reversed(products))
+    products = list(reversed(products))
+    
+    # find the start and end index of the products to display
+    start = (page - 1) * PER_PAGE_PRODUCTS
+    end = start + PER_PAGE_PRODUCTS
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (length // PER_PAGE_PRODUCTS) + (length % PER_PAGE_PRODUCTS > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('all_products', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    
+    return render_template('all_products.html', products = products, pagination_links=pagination_links, page=page)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
