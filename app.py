@@ -27,7 +27,7 @@ db = SQL("sqlite:///info.db")
 PER_PAGE = 5
 
 # products pages
-PER_PAGE_PRODUCTS = 7
+PER_PAGE_PRODUCTS = 8
 
 #index pages
 PER_PAGE_INDEX = 8
