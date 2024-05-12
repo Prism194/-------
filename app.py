@@ -25,19 +25,65 @@ db = SQL("sqlite:///info.db")
 # Pagination pages
 # manage pages
 PER_PAGE = 5
+
 # products pages
 PER_PAGE_PRODUCTS = 7
 
+#index pages
+PER_PAGE_INDEX = 8
+
 @app.route('/')
 def home():
-  # You can add logic for your homepage here if needed
-  # database -> image, product name, price
-  return render_template('index.html')  # Assuming you have an index.html
+    # database -> image, product name, price    
+    product_id = db.execute("SELECT id FROM products")
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    image_extension = db.execute("SELECT image_extension FROM products")
+    length = len(product_id)
+
+    # find the products to display
+    products = []
+    for i in range(length):
+        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
+    products = list(reversed(products))
+    products = products[0:PER_PAGE_INDEX]
+    
+    return render_template('index.html', products = products)
 
 @app.route('/about')
 def about():
   # You can pass data to product1.html if needed using variables here
   return render_template('about.html')
+
+@app.route('/all_products')
+def all_products():
+  # You can add logic for your homepage here if needed
+    # database -> image, product name, price, etc
+    page = int(request.args.get('page', 1))
+    product_id = db.execute("SELECT id FROM products")
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    image_extension = db.execute("SELECT image_extension FROM products")
+    length = len(product_id)
+    products = []
+    for i in range(length):
+        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
+    products = list(reversed(products))
+    
+    # find the start and end index of the products to display
+    start = (page - 1) * PER_PAGE_PRODUCTS
+    end = start + PER_PAGE_PRODUCTS
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (length // PER_PAGE_PRODUCTS) + (length % PER_PAGE_PRODUCTS > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('all_products', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    
+    return render_template('all_products.html', products = products, pagination_links=pagination_links, page=page)
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -174,17 +220,32 @@ def edit(product_id):
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             delete_existing_image(product_id)
             file.save(file_path)
+        elif not file:
+            if not any([product_name_error, quantity_error, price_error]):
+                product_list=[]
+                product_list = db.execute("SELECT id FROM products")
+                length = len(product_list)
+                for i in range(length):
+                    product_list[i] = (product_list[i]["id"])
+                index = product_list.index(product_id)
+                page = index // PER_PAGE + 1           
+                db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
+                if int(quantity) == 0:
+                    db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
+                return redirect(url_for('manage', page=page))
         else:
-            image_error = "Invalid or no image provided"
+            image_error = "Invalid image format"
         if not any([product_name_error, quantity_error, price_error, image_error]):
             product_list=[]
-            product_list = db.execute("SELECT productname FROM products")
+            product_list = db.execute("SELECT id FROM products")
             length = len(product_list)
             for i in range(length):
-                product_list[i] = (product_list[i]["productname"])
-            index = product_list.index(old_product_name[0]["productname"])
+                product_list[i] = (product_list[i]["id"])
+            index = product_list.index(product_id)
             page = index // PER_PAGE + 1           
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, image_extension = ? WHERE id = ?", product_name, quantity, price, filename.rsplit('.', 1)[1].lower(), product_id)
+            if int(quantity) == 0:
+                db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
             return redirect(url_for('manage', page=page))
         else:
             return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
@@ -224,38 +285,9 @@ def delete(product_id):
         if filename.startswith(f"product{product_id}."):
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     db.execute("DELETE FROM products WHERE id = ?", product_id)
+    db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
     return redirect(url_for('manage', page=page))
           
-
-@app.route('/all_products')
-def all_products():
-  # You can add logic for your homepage here if needed
-    # database -> image, product name, price, etc
-    page = int(request.args.get('page', 1))
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    image_extension = db.execute("SELECT image_extension FROM products")
-    length = len(product_id)
-    products = []
-    for i in range(length):
-        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
-    products = list(reversed(products))
-    
-    # find the start and end index of the products to display
-    start = (page - 1) * PER_PAGE_PRODUCTS
-    end = start + PER_PAGE_PRODUCTS
-    products = products[start:end]
-    
-    pagination_links = []
-    total_pages = (length // PER_PAGE_PRODUCTS) + (length % PER_PAGE_PRODUCTS > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for('all_products', page=num)  # Generate URL for each page
-        pagination_links.append(link)
-    
-    return render_template('all_products.html', products = products, pagination_links=pagination_links, page=page)
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
@@ -337,6 +369,123 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")   
+
+@app.route("/add_to_cart/<int:product_id>", methods=["POST"])
+@login_required
+def add_to_cart(product_id):
+    
+    quantity_error = None
+    # check if the quantity is input
+    quantity = request.form.get("quantity")
+    if not quantity:
+        quantity_error = "Please input stock"
+    # check if the quantity is valid, only takes 0 and positive integer
+    if quantity and not quantity.isdigit():
+        quantity_error = "Please input appropriate stock"
+    stock = db.execute("SELECT quantity FROM products WHERE id = ?", product_id)
+    if int(quantity) > int(stock[0]["quantity"]):
+        quantity_error = "Not enough stock"
+    if quantity_error:
+        return render_template("error.html", quantity_error=quantity_error)
+    check = db.execute("SELECT * FROM cart WHERE user_id = ? AND product_id = ?", session["user_id"], product_id)
+    if check:
+        db.execute("UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND product_id = ?", quantity, session["user_id"], product_id)
+    else:
+        db.execute("INSERT INTO cart (user_id, product_id, quantity) VALUES(?, ?, ?)", session["user_id"], product_id, quantity)
+
+    return redirect("/cart")
+
+@app.route("/cart")
+@login_required
+def cart():
+    cart = db.execute("SELECT * FROM cart WHERE user_id = ?", session["user_id"])
+    products = []
+    cnt = 0
+    total = 0
+    for item in cart:
+        product_id = item["product_id"]
+        product_name = db.execute("SELECT productname FROM products WHERE id = ?", item["product_id"])[0]["productname"]
+        quantity = item["quantity"]
+        if int(quantity) > int(db.execute("SELECT quantity FROM products WHERE id = ?", item["product_id"])[0]["quantity"]):
+            quantity = db.execute("SELECT quantity FROM products WHERE id = ?", item["product_id"])[0]["quantity"]
+            db.execute("UPDATE cart SET quantity = ? WHERE product_id = ? AND user_id = ?", quantity, item["product_id"], session["user_id"])
+        price = db.execute("SELECT price FROM products WHERE id = ?", item["product_id"])[0]["price"]
+        products.append({"index" : cnt + 1, "product_id" : product_id, "product_name": product_name, "quantity": quantity, "price": price})
+        total += int(quantity) * int(price)
+        cnt += 1
+    
+    # check if the page parameter is in URL, and get it
+    page = int(request.args.get('page', 1))
+    length = len(products)
+            
+    # find the start and end index of the products to display
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('cart', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+
+    return render_template("cart.html", products=products, pagination_links=pagination_links, page=page, total=total)
+
+@app.route("/update_quantity/<int:product_id>", methods=["POST"])
+@login_required
+def update_quantity(product_id):
+    
+    quantity_error = None
+    
+    # check if the quantity is input
+    new_quantity = request.form.get("quantity")
+    if not new_quantity:
+        quantity_error = "Please input stock"
+    # check if the quantity is valid, only takes 0 and positive integer
+    if new_quantity and not new_quantity.isdigit():
+        quantity_error = "Please input appropriate stock"
+    stock = db.execute("SELECT quantity FROM products WHERE id = ?", product_id)
+    if int(new_quantity) > int(stock[0]["quantity"]):
+        quantity_error = "Not enough stock"
+    
+    if quantity_error:
+        return render_template("error.html", quantity_error=quantity_error)
+
+    db.execute("UPDATE cart SET quantity = ? WHERE product_id = ? AND user_id = ?", new_quantity, product_id, session["user_id"])
+    return redirect("/cart")
+    
+@app.route("/delete_item/<int:product_id>")
+@login_required
+def delete_item(product_id):
+    db.execute("DELETE FROM cart WHERE product_id = ? AND user_id = ?", product_id, session["user_id"])
+    return redirect("/cart")
+
+@app.route('/purchase', methods=['POST'])
+@login_required
+def purchase():
+    # Start transaction
+    db.execute("BEGIN")
+    try:
+        # Fetch all items in the user's cart
+        cart_items = db.execute("SELECT product_id, quantity FROM cart WHERE user_id = ?", session["user_id"])
+        
+        # Update the stock quantities in the products table
+        for item in cart_items:
+            db.execute("UPDATE products SET quantity = quantity - ? WHERE id = ?", int(item['quantity']), item['product_id'])
+        
+        # Clear the user's cart
+        db.execute("DELETE FROM cart WHERE user_id = ?", session["user_id"])
+        
+        # Commit changes if all updates are successful
+        db.execute("COMMIT")
+        
+        # Provide a message to the user
+        flash('Purchase complete! Your cart has been cleared.', 'success')
+        return redirect('/')
+    except Exception as e:
+        db.execute("ROLLBACK")
+        flash('An error occurred. Purchase could not be completed.', 'error')
+        return redirect('/cart')
 
 if __name__ == '__main__':
     app.run()
