@@ -1,7 +1,7 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -27,10 +27,10 @@ db = SQL("sqlite:///info.db")
 PER_PAGE = 5
 
 # products pages
-PER_PAGE_PRODUCTS = 8
+PER_PAGE_PRODUCTS = 7
 
 #index pages
-PER_PAGE_INDEX = 8
+PER_PAGE_INDEX = 7
 
 @app.route('/')
 def home():
@@ -85,10 +85,20 @@ def all_products():
     
     return render_template('all_products.html', products = products, pagination_links=pagination_links, page=page)
 
+@app.route('/product/<int:product_id>')
+def product(product_id):
+    product_name = db.execute("SELECT productname FROM products WHERE id = ?", product_id)
+    quantity = db.execute("SELECT quantity FROM products WHERE id = ?", product_id)
+    price = db.execute("SELECT price FROM products WHERE id = ?", product_id)
+    description = db.execute("SELECT description FROM products WHERE id = ?", product_id)
+    image_extension = db.execute("SELECT image_extension FROM products WHERE id = ?", product_id)
+    return render_template('product.html', product_id=product_id, product_name=product_name[0]["productname"], quantity=quantity[0]["quantity"], price=price[0]["price"], image_extension=image_extension[0]["image_extension"], description=description[0]["description"])
+
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
     product_name_error = None
+    description_error = None
     quantity_error = None
     price_error = None
     image_error = None
@@ -97,6 +107,11 @@ def add():
         # check if the product name is input
         if not product_name:
             product_name_error = "Please input product name"
+        
+        description = request.form.get("description")
+        # check if the description is input
+        if not description:
+            description_error = "Please input description"
 
         quantity = request.form.get("quantity")
         # check if the quantity is input
@@ -116,12 +131,12 @@ def add():
         
         file = request.files.get("image")
         
-        if any([product_name_error, quantity_error, price_error]):
-            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error)
+        if any([product_name_error, quantity_error, price_error, description_error]):
+            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, description_error=description_error)
                     
         # Begin a transaction
         db.execute("BEGIN")
-        db.execute("INSERT INTO products (productname, quantity, price) VALUES(?, ?, ?)", product_name, quantity, price)
+        db.execute("INSERT INTO products (productname, quantity, price, description) VALUES(?, ?, ?, ?)", product_name, quantity, price, description)
         result = db.execute("SELECT MAX(id) FROM products")
         max_id = result[0]['MAX(id)']  # Adjusted for accessing id
 
@@ -183,14 +198,21 @@ def edit(product_id):
         old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
         old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
         old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
+        old_description = db.execute("SELECT description FROM products WHERE id = ? ", product_id)
         product_name_error = None
         quantity_error = None
         price_error = None
+        description_error = None
         image_error = None
         product_name = request.form.get("product_name")
         # check if the product name is input
         if not product_name:
             product_name_error = "Please input product name"
+
+        description = request.form.get("description")
+        # check if the description is input
+        if not description:
+            description_error = "Please input description"
 
         quantity = request.form.get("quantity")
         # check if the quantity is input
@@ -221,7 +243,7 @@ def edit(product_id):
             delete_existing_image(product_id)
             file.save(file_path)
         elif not file:
-            if not any([product_name_error, quantity_error, price_error]):
+            if not any([product_name_error, quantity_error, price_error, description_error]):
                 product_list=[]
                 product_list = db.execute("SELECT id FROM products")
                 length = len(product_list)
@@ -229,13 +251,13 @@ def edit(product_id):
                     product_list[i] = (product_list[i]["id"])
                 index = product_list.index(product_id)
                 page = index // PER_PAGE + 1           
-                db.execute("UPDATE products SET productname = ?, quantity = ?, price = ? WHERE id = ?", product_name, quantity, price, product_id)
+                db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? WHERE id = ?", product_name, quantity, price, description, product_id)
                 if int(quantity) == 0:
                     db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
                 return redirect(url_for('manage', page=page))
         else:
             image_error = "Invalid image format"
-        if not any([product_name_error, quantity_error, price_error, image_error]):
+        if not any([product_name_error, quantity_error, price_error, image_error, description_error]):
             product_list=[]
             product_list = db.execute("SELECT id FROM products")
             length = len(product_list)
@@ -243,18 +265,19 @@ def edit(product_id):
                 product_list[i] = (product_list[i]["id"])
             index = product_list.index(product_id)
             page = index // PER_PAGE + 1           
-            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, image_extension = ? WHERE id = ?", product_name, quantity, price, filename.rsplit('.', 1)[1].lower(), product_id)
+            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? image_extension = ? WHERE id = ?", product_name, quantity, price, description, filename.rsplit('.', 1)[1].lower(), product_id)
             if int(quantity) == 0:
                 db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
             return redirect(url_for('manage', page=page))
         else:
-            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
+            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], old_description=old_description[0]["description"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
     # get
     else:
         old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
         old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
         old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
-        return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"])
+        old_description = db.execute("SELECT description FROM products WHERE id = ? ", product_id)
+        return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], old_description=old_description[0]["description"])
     
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
@@ -422,7 +445,7 @@ def cart():
     start = (page - 1) * PER_PAGE
     end = start + PER_PAGE
     products = products[start:end]
-    
+
     pagination_links = []
     total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
     for num in range(1, total_pages + 1):
@@ -468,6 +491,9 @@ def purchase():
     try:
         # Fetch all items in the user's cart
         cart_items = db.execute("SELECT product_id, quantity FROM cart WHERE user_id = ?", session["user_id"])
+        if cart_items == []:
+            flash('Your cart is empty. Please add items to proceed with purchase.', 'error')
+            return redirect('/cart')
         
         # Update the stock quantities in the products table
         for item in cart_items:
@@ -480,11 +506,10 @@ def purchase():
         db.execute("COMMIT")
         
         # Provide a message to the user
-        flash('Purchase complete! Your cart has been cleared.', 'success')
+
         return redirect('/')
     except Exception as e:
         db.execute("ROLLBACK")
-        flash('An error occurred. Purchase could not be completed.', 'error')
         return redirect('/cart')
 
 if __name__ == '__main__':
