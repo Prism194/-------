@@ -6,11 +6,43 @@
         <section class="py-5">
             <div class="container px-4 px-lg-5 mt-5">
                 <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+                    {% if page == 1 %}
+                        <div class="col mb-5">
+                            <div class="card h-100">
+                                <!-- Product image-->
+                                <a style="color: black; text-decoration:none" href="#">
+                                    <img class="card-img-top" src="/static/pictures/customization.jpg" alt="..." />
+                                    <!-- Product details-->
+                                    <div class="card-body p-4">
+                                        <div class="text-center">
+                                            <!-- Product name-->
+                                            <h5 class="fw-bolder">주문 제작</h5>
+                                            <!-- Product reviews-->
+                                            <div class="d-flex justify-content-center small text-warning mb-2">
+                                                <div class="bi-star-fill"></div>
+                                                <div class="bi-star-fill"></div>
+                                                <div class="bi-star-fill"></div>
+                                                <div class="bi-star-fill"></div>
+                                                <div class="bi-star-fill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <!-- Product actions-->                            
+                                <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                    <div class="text-center">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-outline-dark mt-auto">Customization</button>
+                                    </div>
+                                </div>                            
+                            </div>
+                        </div>
+                    {% endif %}
                     {% for product in products %}
                         <div class="col mb-5">
                             <div class="card h-100">
                                 <!-- Product image-->
-                                <a style="color: black; text-decoration:none" href="/product1">
+                                <a style="color: black; text-decoration:none" href="/product/{{ product.product_id }}">
                                     <img class="card-img-top" src="/static/product_images/product{{ product.product_id }}.{{ product.image_extension }}" alt="..." />
                                     <!-- Product details-->
                                     <div class="card-body p-4">

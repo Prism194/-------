@@ -26,7 +26,7 @@
                         <td>{{ product.index }}</td>
                         <td>{{ product.product_name }}</td>
                         <td>
-                            <form action="{{ url_for('update_quantity', product_id=product.product_id) }}" method="post">
+                            <form action="{{ url_for('update_quantity', product_id=product.product_id) }}" method="post" id="register-form">
                                 <input type="number" name="quantity" value="{{ product.quantity }}" min="1" class="form-control" style="width: auto;">
                                 <button type="submit" class="btn btn-info btn-sm mt-2">Update</button>
                             </form>
@@ -42,10 +42,22 @@
             </tbody>
         </table>
         <div class="text-right">
-            <form action="/purchase" method="post" style="margin-bottom: 2px; text-align: right; margin-right:12.5%">
+            <form action="/purchase" method="post" style="margin-bottom: 2px; text-align: right; margin-right:12.5%" id="buy-now-form">
                 <button type="submit" class="btn btn-success">Buy Now</button>
             </form>
-        </div>   
+            <div class="mt-2" id="loading-indicator" style="margin-bottom: 2px; text-align: right; margin-right:12.5%; display: none">
+                <p>Loading...</p>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <div class="alert alert-danger mx-auto" role="alert" style="width : 75%">
+                    {% for category, message in messages %}
+                        <strong>{{ category }}:</strong> {{ message }}
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-center">
                 {% if page == 1 %}
@@ -75,4 +87,5 @@
             </ul>
         </nav>
     </div>
+    <script src="/static/loading.js"></script>
 {% endblock %}
