@@ -9,7 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Download and Installation
 
 Download on github
-Clone the repo: ```git clone https://github.com/Prism194/Scrupulous-shopping-mall.git
+Clone the repo: ``` git clone https://github.com/Prism194/Scrupulous-shopping-mall.git
 
 ### Prerequisites
 
@@ -20,10 +20,10 @@ bash
 pip install -r requirements.txt
 
 You need to create a table in the database as follows.
-CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL);
-CREATE UNIQUE INDEX username ON users (username);
-CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, productname TEXT NOT NULL, quantity INTEGER NOT NULL, price INTEGER NOT NULL, image_extension TEXT, description TEXT);
-CREATE TABLE cart(user_id INTEGER, product_id INTEGER, quantity INTEGER);
+``` CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL);
+``` CREATE UNIQUE INDEX username ON users (username);
+``` CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, productname TEXT NOT NULL, quantity INTEGER NOT NULL, price INTEGER NOT NULL, image_extension TEXT, description TEXT);
+``` CREATE TABLE cart(user_id INTEGER, product_id INTEGER, quantity INTEGER);
 
 
 ## Structure
