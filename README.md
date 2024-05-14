@@ -1,6 +1,6 @@
-# Scrupulous shopping mall
+# Flask shopping homepage template
 
-This project is a scrupulous shopping mall homepage, designed to enhance your project's marketing and user experience.
+This project is a Flask shopping homepage template, designed to enhance your project's marketing and user experience.
 
 ## Getting Started
 
