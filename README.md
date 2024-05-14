@@ -1,4 +1,4 @@
-# Flask shopping homepage template
+# Flask shopping homepage
 
 This project is a Flask shopping homepage template, designed to enhance your project's marketing and user experience.
 
