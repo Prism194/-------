@@ -53,12 +53,12 @@ def home():
 
 @app.route('/about')
 def about():
-  # You can pass data to product1.html if needed using variables here
+  
   return render_template('about.html')
 
 @app.route('/all_products')
 def all_products():
-  # You can add logic for your homepage here if needed
+  
     # database -> image, product name, price, etc
     page = int(request.args.get('page', 1))
     product_id = db.execute("SELECT id FROM products")
@@ -93,6 +93,33 @@ def product(product_id):
     description = db.execute("SELECT description FROM products WHERE id = ?", product_id)
     image_extension = db.execute("SELECT image_extension FROM products WHERE id = ?", product_id)
     return render_template('product.html', product_id=product_id, product_name=product_name[0]["productname"], quantity=quantity[0]["quantity"], price=price[0]["price"], image_extension=image_extension[0]["image_extension"], description=description[0]["description"])
+
+@app.route('/manage')
+@login_required
+def manage():
+    # check if the page parameter is in URL, and get it
+    page = int(request.args.get('page', 1))
+    product_id = db.execute("SELECT id FROM products")
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    length = len(product_id)
+    products = []
+    for i in range(length):
+        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"])})
+    
+    # find the start and end index of the products to display
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('manage', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    return render_template("manage.html", products=products, pagination_links=pagination_links, page=page)
+
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -164,32 +191,6 @@ def allowed_file(filename):
 
 def get_extension(filename):
     return filename.rsplit('.', 1)[1].lower()
-
-@app.route('/manage')
-@login_required
-def manage():
-    # check if the page parameter is in URL, and get it
-    page = int(request.args.get('page', 1))
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    length = len(product_id)
-    products = []
-    for i in range(length):
-        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"])})
-    
-    # find the start and end index of the products to display
-    start = (page - 1) * PER_PAGE
-    end = start + PER_PAGE
-    products = products[start:end]
-    
-    pagination_links = []
-    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for('manage', page=num)  # Generate URL for each page
-        pagination_links.append(link)
-    return render_template("manage.html", products=products, pagination_links=pagination_links, page=page)
 
 @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -310,10 +311,9 @@ def delete(product_id):
     db.execute("DELETE FROM products WHERE id = ?", product_id)
     db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
     return redirect(url_for('manage', page=page))
-          
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register user"""
     username_error = None
     password_error = None
     confirmation_error = None
@@ -343,8 +343,6 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Log user in"""
-
     # Forget any user_id
     session.clear()
     username_error = None
@@ -385,8 +383,6 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """Log user out"""
-
     # Forget any user_id
     session.clear()
 
