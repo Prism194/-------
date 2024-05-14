@@ -59,39 +59,27 @@ While not a real transaction system, this feature simulates the purchase process
 
 ## Specification
 
-1. ```python
-@app.route(‘/’)
-```
+1. @app.route(‘/’)
 - The product information stored in the products is stored in the list in the form of a dictionary and displayed in the latest order.
 
-2. ```python
-@app.route(‘/about’)
-```
+2. @app.route(‘/about’)
 - Displays the introduction page.
 - I put in the ability to auto-scroll by pressing the table of contents through the Javascript syntax in html.
 
-3. ```python
-@app.route('/all_products')
-```
+3. @app.route('/all_products')
 - The product information stored in the products is stored in the list in the form of a dictionary and displayed in the latest order.
 - Use the PageNation function.
 
-4. ```python
-@app.route('/product/<int:product_id>')
-```
+4. @app.route('/product/<int:product_id>')
 - Receive product_id to display detailed pages for a particular product.
 
-5. ```python
-@app.route('/manage')
-```
+5. @app.route('/manage')
 - The product information stored in the products database is stored in the list in the form of a dictionary and displayed in the latest order.
 - Use the PageNation function.
 
-6. ```python
-@app.route('/add', methods=['GET', 'POST'])
-```
-* GET : Displays the add.html file.
-* POST
+6. @app.route('/add', methods=['GET', 'POST'])
+- GET : Displays the add.html file.
+- POST
     - Receive product name, description, quantity, price, and image information from the manager.
     - The product name and explanation go through the process of checking whether the content exists.
     - The quantity and price go through the process of checking whether the content exists and whether it is an integer greater than or equal to zero.
@@ -105,12 +93,10 @@ While not a real transaction system, this feature simulates the purchase process
     - If the image file is not valid, rollback and return the temporarily assigned ID
     - > Prevent garbage id and values from occurring in the database when an unexpected error occurs when inserting an image.
 
-7. ```python
-@app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
-```
-* GET : Get the existing product name, description, quantity, and price and display it on the edit console.
+7. @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
+- GET : Get the existing product name, description, quantity, and price and display it on the edit console.
     - This is for your convenience, and by displaying the specifications of the pre-edit product in the Edit console, you don't have to remember the previous values.
-* POST
+- POST
     - You can modify product name, description, quantity, price, and image. Logic is the same as add function.
     - Unlike add, it made it possible to modify the data without necessarily entering the image.
     - > At this time, the image will remain the same as the image stored on the server.
@@ -118,43 +104,31 @@ While not a real transaction system, this feature simulates the purchase process
     - If the correction fails, receive the existing product name, description, quantity, and price, display it on the edit console, and show the error.
     - If the quality is 0, clear the product information from the cart database of all consumers.
 
-8. ```python
-@app.route('/delete/<int:product_id>')
-```
+8. @app.route('/delete/<int:product_id>')
 - Delete the desired product based on the product id
 - After deletion, we used the PageNation feature to allow you to go directly to the page where the product is located in the manage console.
 - When you delete a product, it clears its product information from the cart database of all consumers.
 
-9. ```python
-@app.route("/register", methods=["GET", "POST"])
-```
+9. @app.route("/register", methods=["GET", "POST"])
 - Get the user's username, password, confirmation and store it in the user database.
 - Verify that the contents exist for username, password, and confirmation.
 - Verify that the password and confirmation values are the same.
 - If there are no errors, use the hashing function in the werkzeug library to hashen the password and save it.
 
-10. ```python
-@app.route("/login", methods=["GET", "POST"])
-```
+10. @app.route("/login", methods=["GET", "POST"])
 - Get the user's username, password, confirmation, and enter the user's unique id value in the session when the login is successful compared to the database.
 - Both username and password verify that the contents exist and that they match the database. 
 
-11. ```python
-@app.route("/logout")
-```
+11. @app.route("/logout")
 - Delete the value stored in the session and return it to the main home page.
 
-12. ```python
-@app.route("/add_to_cart/<int:product_id>", methods=["POST"])
-```
+12. @app.route("/add_to_cart/<int:product_id>", methods=["POST"])
 - It receives products and quantities to purchase from users and stores them in the cart database.
 - It goes through the process of checking whether the quantity exists and whether it is an integer greater than or equal to zero.
 - Make sure the quantity is higher than the inventory.
 - When you put it in a cart, if it already exists in the cart, increase the quantity of that product only, and if it doesn't exist, put a new product in the database. 
 
-13. ```python
-@app.route("/cart")
-```
+13. @app.route("/cart")
 - Identify the user's id through session and extract all product information that the user has from the cart database.
 - Import information such as product name and price from the product database through product_id contained in cart 
 -> We saved memory by reducing the amount of space that overlaps between databases as much as possible.
@@ -162,21 +136,15 @@ While not a real transaction system, this feature simulates the purchase process
 -> This situation does not normally occur under code 12, but if the company suddenly reduces its inventory, the amount in the user cart may be larger than the company's inventory, so we have created an additional code.
 - Use the paganization function to show the user what is contained in the cart. 
 
-14. ```python
-@app.route("/update_quantity/<int:product_id>", methods=["POST"])
-```
+14. @app.route("/update_quantity/<int:product_id>", methods=["POST"])
 - It contains the ability to update the quantity contained in the cart.
 - Verify that the quantity is entered and that the quantity is an integer greater than or equal to zero.
 - Make sure the quantity is higher than the inventory.
 
-15. ```python
-@app.route("/delete_item/<int:product_id>")
-```
+15. @app.route("/delete_item/<int:product_id>")
 - It contains the ability to delete the product contained in the cart. 
 
-16. ```python
-@app.route('/purchase', methods=['POST'])
-```
+16. @app.route('/purchase', methods=['POST'])
 - It contains the ability to purchase products contained in the cart.
 - It is not actually purchased, but when the user presses the purchase button, the inventory is reduced by the quantity purchased.
 - The product cannot be purchased in an empty cart, and an error message was displayed.
