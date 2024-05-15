@@ -2,6 +2,12 @@
 
 This project is a Flask shopping homepage template, designed to enhance your project's marketing and user experience.
 
+## Preview
+<img src="/static/pictures/preview_home.PNG" alt="Picture of sitemap" width="500" height="300">
+<img src="/static/pictures/preview_manage-products.PNG" alt="Picture of manage-products" width="500" height="300">
+<img src="/static/pictures/preview_cart.PNG" alt="Picture of cart" width="500" height="300">
+
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -11,7 +17,7 @@ These instructions will get you a copy of the project up and running on your loc
 Download on github
 Clone the repo: 
 ```
-git clone https://github.com/Prism194/Scrupulous-shopping-mall.git
+git clone https://github.com/Prism194/Flask-shopping-homepage.git
 ```
 
 ### Prerequisites
