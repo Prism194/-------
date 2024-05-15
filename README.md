@@ -3,10 +3,8 @@
 This project is a Flask shopping homepage template, designed to enhance your project's marketing and user experience.
 
 ## Preview
-<img src="/static/pictures/preview_home.PNG" alt="Picture of sitemap" width="500" height="300">
-<img src="/static/pictures/preview_manage-products.PNG" alt="Picture of manage-products" width="500" height="300">
-<img src="/static/pictures/preview_cart.PNG" alt="Picture of cart" width="500" height="300">
-
+![Picture of sitemap](/static/pictures/preview_home.PNG)
+<br>This is a preview of the homepage. Here, users can browse through the available products.
 
 ## Getting Started
 
