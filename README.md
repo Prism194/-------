@@ -13,7 +13,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Download and Installation
 
 Download on github
-Clone the repo: 
+<br>Clone the repo: 
 ```
 git clone https://github.com/Prism194/Flask-shopping-homepage.git
 ```
@@ -22,10 +22,10 @@ git clone https://github.com/Prism194/Flask-shopping-homepage.git
 
 This project requires Python 3 and the packages listed in the `requirements.txt` file. 
 To install these packages, navigate to the project directory and run the following command:
-
+```
 bash
 pip install -r requirements.txt
-
+```
 You need to create a table in the database as follows.
 ```sql
 CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT NOT NULL, hash TEXT NOT NULL);
@@ -39,11 +39,11 @@ This project constructed a backend using the flask framework.
 This project configured the database using the sqlite 3 database provided by cs50.
 The main Python application is app.py. This file runs the web server and handles requests.
 The HTML files are located in the templates directory. These files define the structure and content of the web pages.
-In static folder, it handles static images and css file
+In static folder, it handles static images and css file.
 
 ## Usage
 Key Features:
-About Section:
+<br>About Section:
 Displays a comprehensive company overview, highlighting your business's mission, values, and offerings.
 
 Product Management:
@@ -72,14 +72,14 @@ While not a real transaction system, this feature simulates the purchase process
 
 3. @app.route('/all_products')
 - The product information stored in the products is stored in the list in the form of a dictionary and displayed in the latest order.
-- Use the PageNation function.
+- Used the PageNation function.
 
 4. @app.route('/product/<int:product_id>')
 - Receive product_id to display detailed pages for a particular product.
 
 5. @app.route('/manage')
 - The product information stored in the products database is stored in the list in the form of a dictionary and displayed in the latest order.
-- Use the PageNation function.
+- Used the PageNation function.
 
 6. @app.route('/add', methods=['GET', 'POST'])
 - GET : Displays the add.html file.
@@ -138,7 +138,7 @@ While not a real transaction system, this feature simulates the purchase process
 -> We saved memory by reducing the amount of space that overlaps between databases as much as possible.
 - If the quantity contained by the user becomes larger than the inventory, the quantity of goods contained in the cart must not exceed the quantity in stock.
 -> This situation does not normally occur under code 12, but if the company suddenly reduces its inventory, the amount in the user cart may be larger than the company's inventory, so we have created an additional code.
-- Use the paganization function to show the user what is contained in the cart. 
+- Used the paganization function to show the user what is contained in the cart. 
 
 14. @app.route("/update_quantity/<int:product_id>", methods=["POST"])
 - It contains the ability to update the quantity contained in the cart.
@@ -160,7 +160,7 @@ While not a real transaction system, this feature simulates the purchase process
 
 
 ## Authors
-Na Seongchan - Initial work
+Seongchan Na - Initial work
 
 ## Acknowledgments
 
@@ -170,4 +170,4 @@ Na Seongchan - Initial work
 * This project also uses code from the CS50 course. The original code is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license](https://cs50.harvard.edu/x/2024/license/).
 
 ## License
-This project is licensed a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license. - see the [LICENSE.txt](LICENSE.txt) file for details. Please note that this license does not apply to the code from[startbootstrap-shop-homepage](https://github.com/StartBootstrap/startbootstrap-shop-homepage), [startbootstrap-shop-item](https://github.com/StartBootstrap/startbootstrap-shop-item) and the CS50 course, which have their own licenses.
+This project is licensed a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license. - see the [LICENSE.txt](LICENSE.txt) file for details. Please note that this license does not apply to the code from [startbootstrap-shop-homepage](https://github.com/StartBootstrap/startbootstrap-shop-homepage), [startbootstrap-shop-item](https://github.com/StartBootstrap/startbootstrap-shop-item) and the CS50 course, which have their own licenses.
