@@ -77,7 +77,7 @@ While not a real transaction system, this feature simulates the purchase process
 4. @app.route('/product/<int:product_id>')
 - Receive product_id to display detailed pages for a particular product.
 
-5. @app.route('search')
+5. @app.route('/search')
 - Gets the search result by get method
 - Used the PageNtion function.
 
