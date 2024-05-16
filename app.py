@@ -102,6 +102,38 @@ def product(product_id):
     image_extension = db.execute("SELECT image_extension FROM products WHERE id = ?", product_id)
     return render_template('product.html', product_id=product_id, product_name=product_name[0]["productname"], quantity=quantity[0]["quantity"], price=price[0]["price"], image_extension=image_extension[0]["image_extension"], description=description[0]["description"])
 
+# Search by get method    
+@app.route('/search')
+def search():
+    search = request.args.get('search', '')
+    if not search:
+        return redirect('/')
+    search = search.lower()
+    page = int(request.args.get('page', 1))
+    product_id = db.execute("SELECT id FROM products")
+    product_name = db.execute("SELECT productname FROM products")
+    quantity = db.execute("SELECT quantity FROM products")
+    price = db.execute("SELECT price FROM products")
+    image_extension = db.execute("SELECT image_extension FROM products")
+    length = len(product_id)
+    products = []
+    for i in range(length):
+        if product_name[i]["productname"].lower().startswith(search):
+            products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
+    product_length = len(products)
+
+    start = (page - 1) * PER_PAGE_PRODUCTS
+    end = start + PER_PAGE_PRODUCTS
+    products = products[start:end]
+    
+    pagination_links = []
+    total_pages = (product_length // PER_PAGE_PRODUCTS) + (product_length % PER_PAGE_PRODUCTS > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('search', search=search, page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    
+    return render_template('search.html', search = search, products = products, pagination_links=pagination_links, page=page)
+
 @app.route('/manage')
 @login_required
 def manage():

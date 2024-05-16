@@ -77,6 +77,10 @@ While not a real transaction system, this feature simulates the purchase process
 4. @app.route('/product/<int:product_id>')
 - Receive product_id to display detailed pages for a particular product.
 
+5. @app.route('search')
+- Gets the search result by get method
+- Used the PageNtion function.
+
 5. @app.route('/manage')
 - The product information stored in the products database is stored in the list in the form of a dictionary and displayed in the latest order.
 - Used the PageNation function.

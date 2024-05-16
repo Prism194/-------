@@ -10,59 +10,14 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
 -->
 {% extends "layout.html" %}
-{% block title %}REFILM{% endblock %}
+{% block title %}All products{% endblock %}
 
 {% block content %}
-        <!-- Header-->
-        <header class="bg-dark py-5">
-            <div class="container px-4 px-lg-5 my-5">
-                <div class="text-center text-white">
-                    <h1 class="display-4 fw-bolder">폐필름통의 변신, 나만의 커스텀 소품으로!</h1>
-                    <p class="lead fw-normal text-white-50 mb-0">지금 바로 환경을 지키는 스마트한 선택을 해보세요</p>
-                    <!-- Search form -->
-                    <form action="/search" method="get" class="form-inline d-flex justify-content-center mt-4">
-                        <input type="text" name="search" class="form-control form-control-lg mr-2" style="width: 50%;">
-                        <button type="submit" class="btn btn-success btn-lg">Search</button>
-                    </form>
-                </div>
-            </div>
-        </header>
         <!-- Section-->
         <section class="py-5">
             <div class="container px-4 px-lg-5 mt-5">
                 <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-                    <div class="col mb-5">
-                        <div class="card h-100">
-                            <!-- Product image-->
-                            <a style="color: black; text-decoration:none" href="#">
-                                <img class="card-img-top" src="/static/pictures/customization.jpg" alt="..." />
-                                <!-- Product details-->
-                                <div class="card-body p-4">
-                                    <div class="text-center">
-                                        <!-- Product name-->
-                                        <h5 class="fw-bolder">주문 제작</h5>
-                                        <!-- Product reviews-->
-                                        <div class="d-flex justify-content-center small text-warning mb-2">
-                                            <div class="bi-star-fill"></div>
-                                            <div class="bi-star-fill"></div>
-                                            <div class="bi-star-fill"></div>
-                                            <div class="bi-star-fill"></div>
-                                            <div class="bi-star-fill"></div>
-                                        </div>
-                                        <!-- Product quantity, price-->
-                                        
-                                    </div>
-                                </div>
-                            </a>
-                            <!-- Product actions-->                            
-                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                                <div class="text-center">
-                                    <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-outline-dark mt-auto">Customization</button>
-                                </div>
-                            </div>                            
-                        </div>
-                    </div>
+                    
                     {% for product in products %}
                         <div class="col mb-5">
                             <div class="card h-100">
@@ -92,15 +47,43 @@
                                 <form action="/add_to_cart/{{ product.product_id }}" method="post">
                                     <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                                         <div class="text-center">
-                                            <input type="hidden" name="quantity" value="1">
+                                            구매수량 <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center mb-3" required>
                                             <button type="submit" class="btn btn-outline-dark mt-auto">Add to cart</button>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    {% endfor %}
+                    {% endfor %}    
                 </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page == 1 %}
+                            <li class="page-item disabled">
+                                <a class="page-link">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('search', search=search, page=page-1) }}">Previous</a>                                
+                            </li>
+                        {% endif %}
+                                
+                        {% for link in pagination_links %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ link }}">{{ loop.index }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if page >= pagination_links|length %}
+                            <li class="page-item disabled">
+                                <a class="page-link">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('search', search=search, page=page+1) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
         </section>
 {% endblock %}
