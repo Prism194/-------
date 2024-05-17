@@ -43,25 +43,21 @@ PER_PAGE_INDEX = 7
 def get_data():
     info = db.execute("SELECT * FROM products")
     length = len(info)
+    return info, length
+
+def get_page_data(start, per_page_number):
+    info = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ?, ?", start, per_page_number)
     return info
+
 
 @app.route('/')
 def home():
     # database -> image, product name, price    
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    image_extension = db.execute("SELECT image_extension FROM products")
-    length = len(product_id)
-
-    # find the products to display
+    data = get_page_data(0, PER_PAGE_INDEX)
     products = []
-    for i in range(length):
-        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
-    products = list(reversed(products))
-    products = products[0:PER_PAGE_INDEX]
-    
+    for i in range(PER_PAGE_INDEX):
+        products.append({"product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"]), "image_extension": data[i]["image_extension"]})
+
     return render_template('index.html', products = products)
 
 @app.route('/about')
