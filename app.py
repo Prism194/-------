@@ -31,31 +31,28 @@ app.config['UPLOAD_FOLDER'] = './static/product_images'
 db = SQL("sqlite:///info.db")
 
 # Pagination pages
+
+# pages
+PER_PAGE = 7
+
 # manage pages
-PER_PAGE = 5
+PER_PAGE_MANAGE = 5
 
-# products pages
-PER_PAGE_PRODUCTS = 7
+# get the total number of products in the database
+all_product_length = len(db.execute("SELECT * FROM products"))
 
-#index pages
-PER_PAGE_INDEX = 7
-
-def get_data():
-    info = db.execute("SELECT * FROM products")
-    length = len(info)
-    return info, length
-
+# get the product data from the database by descending order
 def get_page_data(start, per_page_number):
-    info = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ?, ?", start, per_page_number)
-    return info
-
+    data = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ? OFFSET ?", per_page_number, start)
+    length = len(data)
+    return data, length        
 
 @app.route('/')
 def home():
     # database -> image, product name, price    
-    data = get_page_data(0, PER_PAGE_INDEX)
+    data, length = get_page_data(0, PER_PAGE)
     products = []
-    for i in range(PER_PAGE_INDEX):
+    for i in range(length):
         products.append({"product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"]), "image_extension": data[i]["image_extension"]})
 
     return render_template('index.html', products = products)
@@ -70,24 +67,15 @@ def all_products():
   
     # database -> image, product name, price, etc
     page = int(request.args.get('page', 1))
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    image_extension = db.execute("SELECT image_extension FROM products")
-    length = len(product_id)
+    start = (page - 1) * PER_PAGE
+    data, length = get_page_data(start, PER_PAGE)
+    
     products = []
     for i in range(length):
-        products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
-    products = list(reversed(products))
-    
-    # find the start and end index of the products to display
-    start = (page - 1) * PER_PAGE_PRODUCTS
-    end = start + PER_PAGE_PRODUCTS
-    products = products[start:end]
-    
+        products.append({"product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"]), "image_extension": data[i]["image_extension"]})
+        
     pagination_links = []
-    total_pages = (length // PER_PAGE_PRODUCTS) + (length % PER_PAGE_PRODUCTS > 0)
+    total_pages = (all_product_length // PER_PAGE) + (all_product_length % PER_PAGE > 0)
     for num in range(1, total_pages + 1):
         link = url_for('all_products', page=num)  # Generate URL for each page
         pagination_links.append(link)
@@ -96,12 +84,8 @@ def all_products():
 
 @app.route('/product/<int:product_id>')
 def product(product_id):
-    product_name = db.execute("SELECT productname FROM products WHERE id = ?", product_id)
-    quantity = db.execute("SELECT quantity FROM products WHERE id = ?", product_id)
-    price = db.execute("SELECT price FROM products WHERE id = ?", product_id)
-    description = db.execute("SELECT description FROM products WHERE id = ?", product_id)
-    image_extension = db.execute("SELECT image_extension FROM products WHERE id = ?", product_id)
-    return render_template('product.html', product_id=product_id, product_name=product_name[0]["productname"], quantity=quantity[0]["quantity"], price=price[0]["price"], image_extension=image_extension[0]["image_extension"], description=description[0]["description"])
+    data = db.execute("SELECT * FROM products WHERE id = ?", product_id)
+    return render_template('product.html', product_id=product_id, product_name=data[0]["productname"], quantity=data[0]["quantity"], price=data[0]["price"], image_extension=data[0]["image_extension"], description=data[0]["description"])
 
 # Search by get method    
 @app.route('/search')
@@ -111,24 +95,18 @@ def search():
         return redirect('/')
     search = search.lower()
     page = int(request.args.get('page', 1))
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    image_extension = db.execute("SELECT image_extension FROM products")
-    length = len(product_id)
+    data = db.execute("SELECT * FROM products WHERE productname LIKE ? ORDER BY id desc", f"%{search}%")
+    length = len(data)
     products = []
-    for i in range(length):
-        if search in product_name[i]["productname"].lower():
-            products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
-    product_length = len(products)
-
-    start = (page - 1) * PER_PAGE_PRODUCTS
-    end = start + PER_PAGE_PRODUCTS
+    for i in range(length):       
+        products.append({"product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"]), "image_extension": data[i]["image_extension"]})
+    
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
     products = products[start:end]
     
     pagination_links = []
-    total_pages = (product_length // PER_PAGE_PRODUCTS) + (product_length % PER_PAGE_PRODUCTS > 0)
+    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
     for num in range(1, total_pages + 1):
         link = url_for('search', search=search, page=num)  # Generate URL for each page
         pagination_links.append(link)
@@ -150,12 +128,12 @@ def manage():
         products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"])})
     
     # find the start and end index of the products to display
-    start = (page - 1) * PER_PAGE
-    end = start + PER_PAGE
+    start = (page - 1) * PER_PAGE_MANAGE
+    end = start + PER_PAGE_MANAGE
     products = products[start:end]
     
     pagination_links = []
-    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
+    total_pages = (length // PER_PAGE_MANAGE) + (length % PER_PAGE_MANAGE > 0)
     for num in range(1, total_pages + 1):
         link = url_for('manage', page=num)  # Generate URL for each page
         pagination_links.append(link)
