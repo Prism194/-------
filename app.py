@@ -40,6 +40,11 @@ PER_PAGE_PRODUCTS = 7
 #index pages
 PER_PAGE_INDEX = 7
 
+def get_data():
+    info = db.execute("SELECT * FROM products")
+    length = len(info)
+    return info
+
 @app.route('/')
 def home():
     # database -> image, product name, price    
@@ -118,7 +123,7 @@ def search():
     length = len(product_id)
     products = []
     for i in range(length):
-        if product_name[i]["productname"].lower().startswith(search):
+        if search in product_name[i]["productname"].lower():
             products.append({"product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"]), "image_extension": image_extension[i]["image_extension"]})
     product_length = len(products)
 
