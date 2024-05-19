@@ -53,7 +53,48 @@ def make_pagination_link(length, per_page_number, query_string):
     for num in range(1, total_pages + 1):
         link = url_for(f'{query_string}', page=num)  # Generate URL for each page
         pagination_links.append(link)
-    return pagination_links        
+    return pagination_links
+def make_error_message(error_name):
+    if error_name == "product_name":
+        return "Please input product name"
+    elif error_name == "quantity":
+        return "Please input stock"
+    elif error_name == "price":
+        return "Please input price"
+    elif error_name == "description":
+        return "Please input description"
+    elif error_name == "image":
+        return "Invalid or no image provided"
+    elif error_name == "quantity_error":
+        return "Please input appropriate stock"
+    elif error_name == "price_error":
+        return "Please input appropriate price"
+    elif error_name == "image_error":
+        return "Invalid image format"
+    elif error_name == "product_name_error":
+        return "Please input product name"
+    elif error_name == "quantity_error":
+        return "Please input stock"
+    elif error_name == "price_error":
+        return "Please input price"
+    elif error_name == "image_error":
+        return "Invalid image format"
+    elif error_name == "username":
+        return "Please input your username"
+    elif error_name == "password":
+        return "Please input your password"
+    elif error_name == "confirmation":
+        return "Please input confirmation password"
+    elif error_name == "confirmation_error":
+        return "Your password is not identical with confirmation"
+    elif error_name == "invalid":
+        return "invalid username or password"
+    elif error_name == "quantity_error":
+        return "Please input appropriate stock"
+    elif error_name == "error":
+        return "Your cart is empty. Please add items to proceed with purchase."
+    else:
+        return 0        
 
 @app.route('/')
 def home():
