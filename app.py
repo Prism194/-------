@@ -45,7 +45,15 @@ all_product_length = len(db.execute("SELECT * FROM products"))
 def get_page_data(start, per_page_number):
     data = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ? OFFSET ?", per_page_number, start)
     length = len(data)
-    return data, length        
+    return data, length
+
+def make_pagination_link(length, per_page_number, query_string):
+    pagination_links = []
+    total_pages = (length // per_page_number) + (all_product_length % per_page_number > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for(f'{query_string}', page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    return pagination_links        
 
 @app.route('/')
 def home():
@@ -73,13 +81,9 @@ def all_products():
     products = []
     for i in range(length):
         products.append({"product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"]), "image_extension": data[i]["image_extension"]})
+
+    pagination_links = make_pagination_link(all_product_length, PER_PAGE, 'all_products')    
         
-    pagination_links = []
-    total_pages = (all_product_length // PER_PAGE) + (all_product_length % PER_PAGE > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for('all_products', page=num)  # Generate URL for each page
-        pagination_links.append(link)
-    
     return render_template('all_products.html', products = products, pagination_links=pagination_links, page=page)
 
 @app.route('/product/<int:product_id>')
@@ -105,12 +109,8 @@ def search():
     end = start + PER_PAGE
     products = products[start:end]
     
-    pagination_links = []
-    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for('search', search=search, page=num)  # Generate URL for each page
-        pagination_links.append(link)
-    
+    pagination_links = make_pagination_link(length, PER_PAGE, 'search')
+
     return render_template('search.html', search = search, products = products, pagination_links=pagination_links, page=page)
 
 @app.route('/manage')
@@ -118,25 +118,14 @@ def search():
 def manage():
     # check if the page parameter is in URL, and get it
     page = int(request.args.get('page', 1))
-    product_id = db.execute("SELECT id FROM products")
-    product_name = db.execute("SELECT productname FROM products")
-    quantity = db.execute("SELECT quantity FROM products")
-    price = db.execute("SELECT price FROM products")
-    length = len(product_id)
+    start = (page - 1) * PER_PAGE_MANAGE
+    data, length = get_page_data(start, PER_PAGE_MANAGE)
+   
     products = []
     for i in range(length):
-        products.append({"index": i + 1, "product_name": product_name[i]["productname"], "quantity": quantity[i]["quantity"], "price": price[i]["price"], "product_id":int(product_id[i]["id"])})
-    
-    # find the start and end index of the products to display
-    start = (page - 1) * PER_PAGE_MANAGE
-    end = start + PER_PAGE_MANAGE
-    products = products[start:end]
-    
-    pagination_links = []
-    total_pages = (length // PER_PAGE_MANAGE) + (length % PER_PAGE_MANAGE > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for('manage', page=num)  # Generate URL for each page
-        pagination_links.append(link)
+        products.append({"index": i + 1 + start, "product_name": data[i]["productname"], "quantity": data[i]["quantity"], "price": data[i]["price"], "product_id":int(data[i]["id"])})
+        
+    pagination_links = make_pagination_link(all_product_length, PER_PAGE_MANAGE, 'manage')
     return render_template("manage.html", products=products, pagination_links=pagination_links, page=page)
 
 
