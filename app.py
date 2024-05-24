@@ -109,9 +109,24 @@ def search():
     end = start + PER_PAGE
     products = products[start:end]
     
-    pagination_links = make_pagination_link(length, PER_PAGE, 'search')
-
+    pagination_links = []
+    total_pages = (length // PER_PAGE) + (all_product_length % PER_PAGE > 0)
+    for num in range(1, total_pages + 1):
+        link = url_for('search', search=search, page=num)  # Generate URL for each page
+        pagination_links.append(link)
+    
     return render_template('search.html', search = search, products = products, pagination_links=pagination_links, page=page)
+
+@app.route('/autocomplete')
+def autocomplete():
+    search = request.args.get('search', '')
+    if not search:
+        return jsonify([])
+
+    search = search.lower()
+    data = db.execute("SELECT productname FROM products WHERE productname LIKE ? ORDER BY id desc", f"%{search}%")
+    suggestions = [item['productname'] for item in data]
+    return jsonify(suggestions)
 
 @app.route('/manage')
 @login_required
