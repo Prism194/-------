@@ -259,13 +259,12 @@ def edit(product_id):
             file.save(file_path)
 
             # Update the product information in the database
-            product_list=[]
             product_list = db.execute("SELECT id FROM products")
-            length = len(product_list)
-            for i in range(length):
-                product_list[i] = (product_list[i]["id"])
             product_list.reverse()
-            index = product_list.index(product_id)
+            for i in range(len(product_list)):
+                if product_list[i]["id"] == product_id:
+                    index = i
+                    break
             page = index // PER_PAGE_MANAGE + 1           
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ?, image_extension = ? WHERE id = ?", product_name, quantity, price, description, filename.rsplit('.', 1)[1].lower(), product_id)
             if int(quantity) == 0:
@@ -274,13 +273,12 @@ def edit(product_id):
         
         # if the image is not given, but the text input is valid, it updates the product information
         elif not file:           
-            product_list=[]
             product_list = db.execute("SELECT id FROM products")
-            length = len(product_list)
-            for i in range(length):
-                product_list[i] = (product_list[i]["id"])
             product_list.reverse()
-            index = product_list.index(product_id)
+            for i in range(len(product_list)):
+                if product_list[i]["id"] == product_id:
+                    index = i
+                    break
             page = index // PER_PAGE_MANAGE + 1           
             db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? WHERE id = ?", product_name, quantity, price, description, product_id)
             if int(quantity) == 0:
