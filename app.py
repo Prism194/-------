@@ -261,7 +261,8 @@ def edit(product_id):
             # Update the product information in the database
             product_list = db.execute("SELECT id FROM products")
             product_list.reverse()
-            for i in range(len(product_list)):
+            length = len(product_list)
+            for i in range(length):
                 if product_list[i]["id"] == product_id:
                     index = i
                     break
@@ -275,7 +276,8 @@ def edit(product_id):
         elif not file:           
             product_list = db.execute("SELECT id FROM products")
             product_list.reverse()
-            for i in range(len(product_list)):
+            length = len(product_list)
+            for i in range(length):            
                 if product_list[i]["id"] == product_id:
                     index = i
                     break
@@ -308,17 +310,19 @@ def delete_existing_image(product_id):
 @app.route('/delete/<int:product_id>')
 @login_required
 def delete(product_id):
-    product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
-    product_list=[]
-    product_list = db.execute("SELECT productname FROM products")
+    
+    product_list = db.execute("SELECT id FROM products")
+    product_list.reverse()
     length = len(product_list)
     for i in range(length):
-        product_list[i] = (product_list[i]["productname"])
-    index = product_list.index(product_name[0]["productname"])
-    if index % PER_PAGE == 0:
-        page = index // PER_PAGE
+        if product_list[i]["id"] == product_id:
+            index = i
+            break
+
+    if index % PER_PAGE_MANAGE == 0:
+        page = index // PER_PAGE_MANAGE
     else:
-        page = index // PER_PAGE + 1
+        page = index // PER_PAGE_MANAGE + 1
     for filename in os.listdir(app.config['UPLOAD_FOLDER']):
         if filename.startswith(f"product{product_id}."):
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
