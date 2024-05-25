@@ -55,6 +55,35 @@ def make_pagination_link(length, per_page_number, query_string):
         pagination_links.append(link)
     return pagination_links
 
+def error_message(product_name, description, quantity, price):
+    product_name_error = None
+    description_error = None
+    quantity_error = None
+    price_error = None
+    
+    # check if the product name is input
+    if not product_name:
+        product_name_error = "Please input product name"
+    
+    # check if the description is input
+    if not description:
+        description_error = "Please input description"
+
+    # check if the quantity is input
+    if not quantity:
+        quantity_error = "Please input stock"
+    # check if the quantity is valid, only takes 0 and positive integer
+    if quantity and not quantity.isdigit():
+        quantity_error = "Please input appropriate stock"
+
+    # check if the price is input
+    if not price:
+        price_error = "Please input price"
+    # check if the price is valid, only takes 0 and positive integer
+    if price and not price.isdigit():
+        price_error = "Please input appropriate price"
+    return product_name_error, description_error, quantity_error, price_error
+
 @app.route('/')
 def home():
     # database -> image, product name, price    
@@ -148,43 +177,22 @@ def manage():
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
-    product_name_error = None
-    description_error = None
-    quantity_error = None
-    price_error = None
-    image_error = None
+    
     if request.method == "POST":
+        image_error = None
+
+        # check the text input error
         product_name = request.form.get("product_name")
-        # check if the product name is input
-        if not product_name:
-            product_name_error = "Please input product name"
-        
         description = request.form.get("description")
-        # check if the description is input
-        if not description:
-            description_error = "Please input description"
-
         quantity = request.form.get("quantity")
-        # check if the quantity is input
-        if not quantity:
-            quantity_error = "Please input stock"
-        # check if the quantity is valid, only takes 0 and positive integer
-        if quantity and not quantity.isdigit():
-            quantity_error = "Please input appropriate stock"
-
         price = request.form.get("price")
-        # check if the price is input
-        if not price:
-            price_error = "Please input price"
-        # check if the price is valid, only takes 0 and positive integer
-        if price and not price.isdigit():
-            price_error = "Please input appropriate price"
-        
-        file = request.files.get("image")
+        product_name_error, description_error, quantity_error, price_error = error_message(product_name, description, quantity, price)
         
         if any([product_name_error, quantity_error, price_error, description_error]):
             return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, description_error=description_error)
-                    
+        
+        # get image file
+        file = request.files.get("image")            
         # Begin a transaction
         db.execute("BEGIN")
         db.execute("INSERT INTO products (productname, quantity, price, description) VALUES(?, ?, ?, ?)", product_name, quantity, price, description)
@@ -193,6 +201,7 @@ def add():
 
         if file and allowed_file(file.filename):
             try:
+                # saves the file when the image is given, and the file is valid
                 filename = secure_filename(file.filename)
                 new_filename = f"product{max_id}.{get_extension(filename)}"
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
@@ -205,6 +214,7 @@ def add():
                 db.execute("ROLLBACK")
                 return render_template("add.html", image_error=str(e))
         else:
+            # if the image is not given, or the image is invalid
             db.execute("ROLLBACK")
             image_error = "Invalid or no image provided"
             return render_template("add.html", image_error=image_error)
@@ -219,90 +229,72 @@ def get_extension(filename):
 @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def edit(product_id):
+    data = db.execute("SELECT * FROM products WHERE id = ? ", product_id)
+    old_product_name = data[0]["productname"]
+    old_quantity = data[0]["quantity"]
+    old_price = data[0]["price"]
+    old_description = data[0]["description"]
     if request.method == 'POST':
-        old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
-        old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
-        old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
-        old_description = db.execute("SELECT description FROM products WHERE id = ? ", product_id)
-        product_name_error = None
-        quantity_error = None
-        price_error = None
-        description_error = None
-        image_error = None
         product_name = request.form.get("product_name")
-        # check if the product name is input
-        if not product_name:
-            product_name_error = "Please input product name"
-
         description = request.form.get("description")
-        # check if the description is input
-        if not description:
-            description_error = "Please input description"
-
         quantity = request.form.get("quantity")
-        # check if the quantity is input
-        if not quantity:
-            quantity_error = "Please input stock"
-        # check if the quantity is valid, only takes 0 and positive integer
-        if quantity and not quantity.isdigit():
-            quantity_error = "Please input appropriate stock"
-
         price = request.form.get("price")
-        # check if the price is input
-        if not price:
-            price_error = "Please input price"
-        # check if the price is valid, only takes 0 and positive integer
-        if price and not price.isdigit():
-            price_error = "Please input appropriate price"
-        
+        image_error = None
+        product_name_error, description_error, quantity_error, price_error = error_message(product_name, description, quantity, price)
+
+        # check if the text input is valid
+        if any([product_name_error, quantity_error, price_error, description_error]):
+            return render_template("edit.html", product_id=product_id, old_product_name = old_product_name, old_quantity = old_quantity, old_price = old_price, old_description=old_description, product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)
+
         file = request.files.get("image")
+        # if the image is given, and the image is valid, it replaces the existing image
         if file and allowed_file(file.filename):
             # Sanitizes the filename and makes it secure
             filename = secure_filename(file.filename)
-
-            # Assuming you have a function to generate the next product id or similar unique identifier
             new_filename = f"product{product_id}.{get_extension(filename)}"
 
             # Make the file path compatible with operating system
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
             delete_existing_image(product_id)
             file.save(file_path)
-        elif not file:
-            if not any([product_name_error, quantity_error, price_error, description_error]):
-                product_list=[]
-                product_list = db.execute("SELECT id FROM products")
-                length = len(product_list)
-                for i in range(length):
-                    product_list[i] = (product_list[i]["id"])
-                index = product_list.index(product_id)
-                page = index // PER_PAGE + 1           
-                db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? WHERE id = ?", product_name, quantity, price, description, product_id)
-                if int(quantity) == 0:
-                    db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
-                return redirect(url_for('manage', page=page))
-        else:
-            image_error = "Invalid image format"
-        if not any([product_name_error, quantity_error, price_error, image_error, description_error]):
+
+            # Update the product information in the database
             product_list=[]
             product_list = db.execute("SELECT id FROM products")
             length = len(product_list)
             for i in range(length):
                 product_list[i] = (product_list[i]["id"])
+            product_list.reverse()
             index = product_list.index(product_id)
-            page = index // PER_PAGE + 1           
-            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? image_extension = ? WHERE id = ?", product_name, quantity, price, description, filename.rsplit('.', 1)[1].lower(), product_id)
+            page = index // PER_PAGE_MANAGE + 1           
+            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ?, image_extension = ? WHERE id = ?", product_name, quantity, price, description, filename.rsplit('.', 1)[1].lower(), product_id)
             if int(quantity) == 0:
                 db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
             return redirect(url_for('manage', page=page))
+        
+        # if the image is not given, but the text input is valid, it updates the product information
+        elif not file:           
+            product_list=[]
+            product_list = db.execute("SELECT id FROM products")
+            length = len(product_list)
+            for i in range(length):
+                product_list[i] = (product_list[i]["id"])
+            product_list.reverse()
+            index = product_list.index(product_id)
+            page = index // PER_PAGE_MANAGE + 1           
+            db.execute("UPDATE products SET productname = ?, quantity = ?, price = ?, description = ? WHERE id = ?", product_name, quantity, price, description, product_id)
+            if int(quantity) == 0:
+                db.execute("DELETE FROM cart WHERE product_id = ?", product_id)
+            return redirect(url_for('manage', page=page))
+        
+        # if the image is given, but the image is invalid, it returns an error message
         else:
-            return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], old_description=old_description[0]["description"], product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)        
+            image_error = "Invalid image format"
+            return render_template("edit.html", product_id=product_id, old_product_name = old_product_name, old_quantity = old_quantity, old_price = old_price, old_description=old_description, product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, image_error=image_error)
+
     # get
     else:
-        old_product_name = db.execute("SELECT productname FROM products WHERE id = ? ", product_id)
-        old_quantity = db.execute("SELECT quantity FROM products WHERE id = ? ", product_id)
-        old_price = db.execute("SELECT price FROM products WHERE id = ? ", product_id)
-        old_description = db.execute("SELECT description FROM products WHERE id = ? ", product_id)
-        return render_template("edit.html", product_id=product_id, old_product_name=old_product_name[0]["productname"], old_quantity=old_quantity[0]["quantity"], old_price=old_price[0]["price"], old_description=old_description[0]["description"])
+        return render_template("edit.html", product_id=product_id, old_product_name = old_product_name, old_quantity = old_quantity, old_price = old_price, old_description=old_description)
     
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
