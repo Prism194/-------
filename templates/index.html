@@ -21,8 +21,8 @@
                     <p class="lead fw-normal text-white-50 mb-0">지금 바로 환경을 지키는 스마트한 선택을 해보세요</p>
                     <!-- Search form -->
                     <form action="/search" method="get" class="form-inline d-flex justify-content-center mt-4">
-                        <input type="text" id="search-input" list="suggestions-list" name="search" class="form-control form-control-lg mr-2" style="width: 50%;">
-                        <datalist id="suggestions-list"></datalist>
+                        <input type="text" id="search-input" name="search" class="form-control form-control-lg mr-2" style="width: 50vw;" autocomplete="off">
+                        <ul id="suggestions-list" class="list-group"></ul>
                         <button type="submit" class="btn btn-success btn-lg">Search</button>
                     </form>
                 </div>
@@ -104,35 +104,5 @@
                 </div>
             </div>
         </section>
-        <script>
-            // waits for the DOM to be fully loaded before running the script
-            document.addEventListener('DOMContentLoaded', function() {
-                // gets the search input and suggestions list elements
-                const searchInput = document.getElementById('search-input');
-                const suggestionsList = document.getElementById('suggestions-list');
-                
-                // listens for input event on search input
-                searchInput.addEventListener('input', function() {
-                    const query = searchInput.value;
-                    // if the query is at least 2 characters long
-                    if (query.length >= 2) {
-                        // fetches the suggestions from the server
-                        fetch(`/autocomplete?search=${query}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                // clears the suggestions list
-                                suggestionsList.innerHTML = '';
-                                // appends the suggestions to the suggestions list
-                                data.forEach(item => {
-                                    const option = document.createElement('option');
-                                    option.value = item;
-                                    suggestionsList.appendChild(option);
-                                });
-                            });
-                    } else {
-                        suggestionsList.innerHTML = '';
-                    }
-                });
-            });
-        </script>
+        <script src="/static/autocomplete.js"></script>
 {% endblock %}

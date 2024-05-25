@@ -10840,3 +10840,24 @@ body {
   background-size: contain;
   background-position: center center;
 }
+/* Additional styles for the autocomplete suggestions */
+#suggestions-list {
+  color:black;
+  position: absolute;
+  background-color: white;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 48px;
+  margin-right:98px;
+  width: 50vw;
+}
+#suggestions-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+#suggestions-list li:hover {
+  background-color: #f0f0f0;
+}

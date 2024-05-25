@@ -117,6 +117,7 @@ def search():
     
     return render_template('search.html', search = search, products = products, pagination_links=pagination_links, page=page)
 
+# autocomplete function, using Ajax
 @app.route('/autocomplete')
 def autocomplete():
     search = request.args.get('search', '')
