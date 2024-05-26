@@ -32,7 +32,7 @@ db = SQL("sqlite:///info.db")
 
 # Pagination pages
 
-# pages
+# common pages
 PER_PAGE = 7
 
 # manage pages
@@ -316,7 +316,7 @@ def delete(product_id):
     length = len(product_list)
     for i in range(length):
         if product_list[i]["id"] == product_id:
-            index = i
+            index = i + 1
             break
 
     if index % PER_PAGE_MANAGE == 0:
@@ -424,7 +424,7 @@ def add_to_cart(product_id):
         quantity_error = "Not enough stock"
     if quantity_error:
         return render_template("error.html", quantity_error=quantity_error)
-    check = db.execute("SELECT * FROM cart WHERE user_id = ? AND product_id = ?", session["user_id"], product_id)
+    check = db.execute("SELECT user_id FROM cart WHERE user_id = ? AND product_id = ?", session["user_id"], product_id)
     if check:
         db.execute("UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND product_id = ?", quantity, session["user_id"], product_id)
     else:
@@ -439,17 +439,22 @@ def cart():
     products = []
     cnt = 0
     total = 0
+    
+    product_list = db.execute("SELECT * FROM products")
     for item in cart:
         product_id = item["product_id"]
-        product_name = db.execute("SELECT productname FROM products WHERE id = ?", item["product_id"])[0]["productname"]
-        quantity = item["quantity"]
-        if int(quantity) > int(db.execute("SELECT quantity FROM products WHERE id = ?", item["product_id"])[0]["quantity"]):
-            quantity = db.execute("SELECT quantity FROM products WHERE id = ?", item["product_id"])[0]["quantity"]
-            db.execute("UPDATE cart SET quantity = ? WHERE product_id = ? AND user_id = ?", quantity, item["product_id"], session["user_id"])
-        price = db.execute("SELECT price FROM products WHERE id = ?", item["product_id"])[0]["price"]
-        products.append({"index" : cnt + 1, "product_id" : product_id, "product_name": product_name, "quantity": quantity, "price": price})
-        total += int(quantity) * int(price)
-        cnt += 1
+        for product in product_list:
+            if product["id"] == product_id:
+                product_name = product["productname"]
+                quantity = item["quantity"]
+                if int(quantity) > int(product["quantity"]):
+                    quantity = product["quantity"]
+                    db.execute("UPDATE cart SET quantity = ? WHERE product_id = ? AND user_id = ?", quantity, product_id, session["user_id"])
+                price = product["price"]
+                products.append({"index" : cnt + 1, "product_id": product_id, "product_name": product_name, "quantity": quantity, "price": price})
+                total += int(quantity) * int(price)
+                cnt += 1
+                break
     
     # check if the page parameter is in URL, and get it
     page = int(request.args.get('page', 1))
@@ -471,22 +476,19 @@ def cart():
 @app.route("/update_quantity/<int:product_id>", methods=["POST"])
 @login_required
 def update_quantity(product_id):
-    
-    quantity_error = None
-    
     # check if the quantity is input
     new_quantity = request.form.get("quantity")
     if not new_quantity:
-        quantity_error = "Please input stock"
+        flash('Please input quantity', 'error')
+        return redirect('/cart')
     # check if the quantity is valid, only takes 0 and positive integer
     if new_quantity and not new_quantity.isdigit():
-        quantity_error = "Please input appropriate stock"
+        flash('Please input appropriate quantity', 'error')
+        return redirect('/cart')
     stock = db.execute("SELECT quantity FROM products WHERE id = ?", product_id)
     if int(new_quantity) > int(stock[0]["quantity"]):
-        quantity_error = "Not enough stock"
-    
-    if quantity_error:
-        return render_template("error.html", quantity_error=quantity_error)
+        flash('Not enough stock', 'error')
+        return redirect('/cart')
 
     db.execute("UPDATE cart SET quantity = ? WHERE product_id = ? AND user_id = ?", new_quantity, product_id, session["user_id"])
     return redirect("/cart")
@@ -518,9 +520,7 @@ def purchase():
         
         # Commit changes if all updates are successful
         db.execute("COMMIT")
-        
-        # Provide a message to the user
-
+    
         return redirect('/')
     except Exception as e:
         db.execute("ROLLBACK")
