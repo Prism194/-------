@@ -38,9 +38,6 @@ PER_PAGE = 7
 # manage pages
 PER_PAGE_MANAGE = 5
 
-# get the total number of products in the database
-all_product_length = len(db.execute("SELECT * FROM products"))
-
 # get the product data from the database by descending order
 def get_page_data(start, per_page_number):
     data = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ? OFFSET ?", per_page_number, start)
@@ -49,7 +46,7 @@ def get_page_data(start, per_page_number):
 
 def make_pagination_link(length, per_page_number, query_string):
     pagination_links = []
-    total_pages = (length // per_page_number) + (all_product_length % per_page_number > 0)
+    total_pages = (length // per_page_number) + (length % per_page_number > 0)
     for num in range(1, total_pages + 1):
         link = url_for(f'{query_string}', page=num)  # Generate URL for each page
         pagination_links.append(link)
@@ -101,7 +98,7 @@ def about():
 
 @app.route('/all_products')
 def all_products():
-  
+    all_product_length = len(db.execute("SELECT * FROM products"))
     # database -> image, product name, price, etc
     page = int(request.args.get('page', 1))
     start = (page - 1) * PER_PAGE
@@ -139,7 +136,7 @@ def search():
     products = products[start:end]
     
     pagination_links = []
-    total_pages = (length // PER_PAGE) + (all_product_length % PER_PAGE > 0)
+    total_pages = (length // PER_PAGE) + (length % PER_PAGE > 0)
     for num in range(1, total_pages + 1):
         link = url_for('search', search=search, page=num)  # Generate URL for each page
         pagination_links.append(link)
@@ -162,6 +159,7 @@ def autocomplete():
 @login_required
 def manage():
     # check if the page parameter is in URL, and get it
+    all_product_length = len(db.execute("SELECT * FROM products"))
     page = int(request.args.get('page', 1))
     start = (page - 1) * PER_PAGE_MANAGE
     data, length = get_page_data(start, PER_PAGE_MANAGE)
