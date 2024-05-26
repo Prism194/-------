@@ -95,6 +95,7 @@ While not a real transaction system, this feature simulates the purchase process
     - The image goes through the process of verifying that the content exists and that the appropriate extension has been entered.
     - When an image is stored in a database, the image name is not directly stored in the database. The image name was combined with the product ID and stored on the server, and only the extension was stored in the database separately.
     - > When adding a new product to the products database, a new file name is created by assigning a higher ID from the existing ID, which causes problems if the entire new file name is created in the database. When modifying a picture in the edit function, the existing product ID remains the same, but if the extension changes, saving the entire file name creates a problem that requires cutting and calculating the name again in the backend code. Therefore, it is necessary to manage the product id and the extension separately to modify the picture more efficiently.
+    - > If you try to insert an image file without assigning a new product id, you cannot assign an appropriate id to the image file because you cannot confirm how many id have already been used as a unique id in the database. Therefore, in this code, we tried to add the new product id to the database by entering a text value and form an image file name that matches this id.
     - When inserting an image, the try-except phrase, the database's commitment, and rollback logic were used to ensure that the database ID was not wasted.
     - First, if there are no errors in product name, description, quantity, and price, first, the ID is temporarily assigned to the database
     - After that, if the image file is valid, commit it to the database to confirm the ID
@@ -156,7 +157,8 @@ While not a real transaction system, this feature simulates the purchase process
 - It contains the ability to purchase products contained in the cart.
 - It is not actually purchased, but when the user presses the purchase button, the inventory is reduced by the quantity purchased.
 - The product cannot be purchased in an empty cart, and an error message was displayed.
-- The try-except syntax allows the database to be recovered in the event of an unexpected error. 
+- The try-except syntax allows the database to be recovered in the event of an unexpected error.
+- We took care of purchase fuction with try-except function because the errors that appear in the user's actual purchase can cause a big problem.
 
 17. loading.js
 - When using functions such as membership registration, login, and purchase, loading was made to appear until the data was fully entered/updated and redirected in the database.
