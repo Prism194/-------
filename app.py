@@ -14,7 +14,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from helpers import login_required
+from helpers import *
 
 app = Flask(__name__)
 app.debug = True
@@ -38,48 +38,16 @@ PER_PAGE = 7
 # manage pages
 PER_PAGE_MANAGE = 5
 
-# get the product data from the database by descending order
-def get_page_data(start, per_page_number):
-    data = db.execute("SELECT * FROM products ORDER BY id desc LIMIT ? OFFSET ?", per_page_number, start)
-    length = len(data)
-    return data, length
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 
-def make_pagination_link(length, per_page_number, query_string):
-    pagination_links = []
-    total_pages = (length // per_page_number) + (length % per_page_number > 0)
-    for num in range(1, total_pages + 1):
-        link = url_for(f'{query_string}', page=num)  # Generate URL for each page
-        pagination_links.append(link)
-    return pagination_links
+def get_extension(filename):
+    return filename.rsplit('.', 1)[1].lower()
 
-def error_message(product_name, description, quantity, price):
-    product_name_error = None
-    description_error = None
-    quantity_error = None
-    price_error = None
-    
-    # check if the product name is input
-    if not product_name:
-        product_name_error = "Please input product name"
-    
-    # check if the description is input
-    if not description:
-        description_error = "Please input description"
-
-    # check if the quantity is input
-    if not quantity:
-        quantity_error = "Please input stock"
-    # check if the quantity is valid, only takes 0 and positive integer
-    if quantity and not quantity.isdigit():
-        quantity_error = "Please input appropriate stock"
-
-    # check if the price is input
-    if not price:
-        price_error = "Please input price"
-    # check if the price is valid, only takes 0 and positive integer
-    if price and not price.isdigit():
-        price_error = "Please input appropriate price"
-    return product_name_error, description_error, quantity_error, price_error
+def delete_existing_image(product_id):
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        if filename.startswith(f"product{product_id}."):
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 @app.route('/')
 def home():
@@ -218,11 +186,6 @@ def add():
             return render_template("add.html", image_error=image_error)
     else:
         return render_template("add.html")
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
-
-def get_extension(filename):
-    return filename.rsplit('.', 1)[1].lower()
 
 @app.route('/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -293,17 +256,7 @@ def edit(product_id):
     # get
     else:
         return render_template("edit.html", product_id=product_id, old_product_name = old_product_name, old_quantity = old_quantity, old_price = old_price, old_description=old_description)
-    
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 
-def get_extension(filename):
-    return filename.rsplit('.', 1)[1].lower()
-
-def delete_existing_image(product_id):
-    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-        if filename.startswith(f"product{product_id}."):
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 @app.route('/delete/<int:product_id>')
 @login_required
