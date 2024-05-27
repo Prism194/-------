@@ -26,43 +26,63 @@
                 <div class="mb-3">
                     <input type="file" class="form-control" name="image" accept="image/*">
                 </div>
-                {% if image_error %}
-                    <div class="alert alert-danger" role="alert">
-                    {{ image_error }}
-                    </div>
-                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=True) %}                    
+                    {% for category, message in messages %}
+                        {% if message and category == 'image_error' %}
+                            <div class="alert alert-danger mx-auto" role="alert" style="width : 90%">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}                    
+                {% endwith %}  
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="text" class="form-control" name="product_name" placeholder="Product name">
                 </div>
-                {% if product_name_error %}
-                    <div class="alert alert-danger" role="alert">
-                    {{ product_name_error }}
-                    </div>
-                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=True) %}                    
+                    {% for category, message in messages %}
+                        {% if message and category == 'product_name_error' %}
+                            <div class="alert alert-danger mx-auto" role="alert" style="width : 90%">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}                    
+                {% endwith %}
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="text" class="form-control" name="description" placeholder="Description">
                 </div>
-                {% if description_error %}
-                    <div class="alert alert-danger" role="alert">
-                    {{ description_error }}
-                    </div>
-                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=True) %}                    
+                    {% for category, message in messages %}
+                        {% if message and category == 'description_error' %}
+                            <div class="alert alert-danger mx-auto" role="alert" style="width : 90%">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}                    
+                {% endwith %} 
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="number" class="form-control" name="quantity" placeholder="Stock">
                 </div>
-                {% if quantity_error %}
-                    <div class="alert alert-danger" role="alert">
-                    {{ quantity_error }}
-                    </div>
-                {% endif %}
+                {% with messages = get_flashed_messages(with_categories=True) %}                    
+                    {% for category, message in messages %}
+                        {% if message and category == 'quantity_error' %}
+                            <div class="alert alert-danger mx-auto" role="alert" style="width : 90%">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}                    
+                {% endwith %}
                 <div class="mb-3">
                     <input autocomplete="off" autofocus type="number" class="form-control" name="price" placeholder="Price">
                 </div>
-                {% if price_error %}
-                    <div class="alert alert-danger" role="alert">
-                    {{ price_error }}
-                    </div>
-                {% endif %}                
+                {% with messages = get_flashed_messages(with_categories=True) %}                    
+                    {% for category, message in messages %}
+                        {% if message and category == 'price_error' %}
+                            <div class="alert alert-danger mx-auto" role="alert" style="width : 90%">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}                    
+                {% endwith %}         
                 <div class="col text-center">
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>

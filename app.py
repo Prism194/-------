@@ -155,7 +155,11 @@ def add():
         product_name_error, description_error, quantity_error, price_error = error_message(product_name, description, quantity, price)
         
         if any([product_name_error, quantity_error, price_error, description_error]):
-            return render_template("add.html", product_name_error=product_name_error, quantity_error=quantity_error, price_error=price_error, description_error=description_error)
+            flash(product_name_error, 'product_name_error')  # Flash error with category
+            flash(description_error, 'description_error')
+            flash(quantity_error, 'quantity_error')
+            flash(price_error, 'price_error')
+            return redirect('/add')
         
         # get image file
         file = request.files.get("image")            
@@ -178,12 +182,15 @@ def add():
                 return redirect("/manage")
             except Exception as e:
                 db.execute("ROLLBACK")
-                return render_template("add.html", image_error=str(e))
+                image_error = str(e)
+                flash(image_error, 'image_error')
+                return redirect('/add')
         else:
             # if the image is not given, or the image is invalid
             db.execute("ROLLBACK")
             image_error = "Invalid or no image provided"
-            return render_template("add.html", image_error=image_error)
+            flash(image_error, 'image_error')
+            return redirect('/add')
     else:
         return render_template("add.html")
 
